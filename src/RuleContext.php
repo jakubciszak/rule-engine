@@ -22,6 +22,16 @@ class RuleContext
         return $this;
     }
 
+    public function variable(string $name, mixed $value = null): self
+    {
+        return $this->addElement(Variable::create($name, $value));
+    }
+
+    public function proposition(string $name, mixed $value = null): self
+    {
+        return $this->addElement(Proposition::create($name, $value));
+    }
+
     public function append(RuleContext $context): self
     {
         $newContext = new RuleContext();

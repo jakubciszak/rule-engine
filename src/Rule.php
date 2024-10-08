@@ -88,6 +88,16 @@ class Rule
         return true;
     }
 
+    public function variable(string $name, mixed $value = null): self
+    {
+        return $this->addElement(Variable::create($name, $value));
+    }
+
+    public function proposition(string $name, null|\Closure|bool $closure = true): self
+    {
+        return $this->addElement(Proposition::create($name, $closure));
+    }
+
     private function isPropositionOrVariable(RuleElement $element): bool
     {
         return $element->getType()->isOnOf(RuleElementType::PROPOSITION, RuleElementType::VARIABLE);
