@@ -1,4 +1,4 @@
-```markdown
+
 # Rule Engine
 
 Rule Engine is a PHP library designed to evaluate complex rules and propositions. It supports various operators and can handle propositions and variables.
@@ -14,7 +14,7 @@ To install the library, use Composer:
 
 ```sh
 composer require jakubciszak/rule-engine
-```
+````
 
 ## Usage
 
