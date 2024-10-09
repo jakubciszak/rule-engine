@@ -25,7 +25,7 @@ This implementation use [Reverse Polish Notation (RPN)](https://en.wikipedia.org
 For example, the expression \
 `(2 + 3) * 5` \
 in standard notation would be written as \
-`2 3 + 5 *` in PRN.
+`2 3 + 5 *` in RPN.
 
 In this notation, you first add 2 and 3 to get 5, and then multiply by 5 to get 25.
 
