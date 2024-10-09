@@ -3,7 +3,7 @@
 
 Rule Engine is a PHP library designed to evaluate complex rules and propositions. It supports various operators and can handle propositions and variables.
 
-This model is based on rule archetype pattern from book ("Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML")[https://amzn.eu/d/arcbwKu] by Jim Arlow and Ila Neustadt.
+This model is based on rule archetype pattern from book ["Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML"](https://amzn.eu/d/arcbwKu) by Jim Arlow and Ila Neustadt.
 
 
 
