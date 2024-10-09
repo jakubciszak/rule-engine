@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  build:
+  phpunit:
     runs-on: ubuntu-latest
 
     steps:
