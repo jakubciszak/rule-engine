@@ -3,7 +3,6 @@
 namespace JakubCiszak\RuleEngine;
 
 use Munus\Collection\GenericList;
-use JakubCiszak\RuleEngine\Exception\InvalidRuleElementError;
 
 class Rule
 {
@@ -12,7 +11,7 @@ class Rule
      */
     private GenericList $elements;
 
-    public function __construct(private readonly string $name)
+    public function __construct(public readonly string $name)
     {
         $this->elements = GenericList::empty();
     }
@@ -61,6 +60,11 @@ class Rule
     {
         return $this->addElement(Operator::LESS_THAN_OR_EQUAL_TO);
     }
+
+    public function in(): self
+    {
+        return $this->addElement(Operator::IN);
+    }
     
     public function addElement(RuleElement $element): self
     {
@@ -80,6 +84,9 @@ class Rule
             $ruleElement = $context->findElement($element);
             /** @var ValueAvailable $ruleElement */
             /** @var ValueAvailable $element  */
+            if ($ruleElement === null) {
+                $ruleElement = clone $element;
+            }
             if ($ruleElement->getValue() === null) {
                 $ruleElement->setValue($element->getValue());
             }
@@ -120,10 +127,6 @@ class Rule
         } elseif ($this->isPropositionOrVariable($ruleElement)) {
             /** @var Proposition|Variable $ruleElement */
             $this->processPropositionOrVariable($stack, $ruleElement);
-        } else {
-            throw new InvalidRuleElementError(
-                sprintf('Unknown RuleElement type "%s".', $ruleElement->getType()->name)
-            );
         }
         return true;
     }

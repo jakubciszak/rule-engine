@@ -15,7 +15,7 @@ class Proposition implements RuleElement
 
     public static function success(): self
     {
-        return self::create('success', true);
+        return self::create('success');
     }
 
     public function getName(): string

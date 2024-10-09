@@ -3,15 +3,13 @@
 namespace JakubCiszak\RuleEngine\Tests;
 
 use DateTimeImmutable;
-use JakubCiszak\RuleEngine\Proposition;
 use JakubCiszak\RuleEngine\Rule;
 use JakubCiszak\RuleEngine\RuleContext;
-use JakubCiszak\RuleEngine\Variable;
 use PHPUnit\Framework\TestCase;
 
 class RuleTest extends TestCase
 {
-    public function testEvaluation(): void
+    public function testEvaluationFail(): void
     {
         $rule = new Rule('someRule');
         $rule->variable('a')
@@ -59,4 +57,38 @@ class RuleTest extends TestCase
         self::assertFalse($proposition->getValue());
     }
 
+    public function testShouldEvaluationSuccess(): void
+    {
+        $rule = new Rule('someRule');
+        $rule->variable('a')
+            ->variable('b')
+            ->equalTo()
+            ->variable('maxAmount')
+            ->variable('amount')
+            ->lessThanOrEqualTo()
+            ->and()
+            ->proposition('ruleProposition')
+            ->or()
+            ->variable('empty')
+            ->variable('anotherEmpty')
+            ->equalTo()
+            ->and()
+            ->variable('allowed_id', [1, 2, 3])
+            ->variable('id')
+            ->in()
+            ->and();
+
+
+        $context = new RuleContext();
+        $context->variable('a', 1)
+            ->variable('b', 1)
+            ->variable('maxAmount', 200)
+            ->variable('amount', 100)
+            ->variable('id', 1)
+            ->proposition('ruleProposition', fn () => false);
+
+        $proposition = $rule->evaluate($context);
+
+        self::assertTrue($proposition->getValue());
+    }
 }

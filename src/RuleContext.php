@@ -44,8 +44,8 @@ class RuleContext
         $this->elements = $elements;
     }
 
-    public function findElement(RuleElement $ruleElement): RuleElement
+    public function findElement(RuleElement $ruleElement): ?RuleElement
     {
-        return $this->elements->get($ruleElement->getName())->get();
+        return $this->elements->get($ruleElement->getName())->getOrElse(null);
     }
 }
