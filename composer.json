@@ -1,6 +1,7 @@
 {
     "name": "jakubciszak/rule-engine",
     "type": "library",
+    "license": "MIT",
     "require": {
         "php": "^8.3",
         "munusphp/munus": "^0.16.0"
