@@ -15,12 +15,6 @@ class Ruleset
         $this->rules = $rules;
     }
 
-    public function addRule(Rule $rule): self
-    {
-        $this->rules[] = $rule;
-        return $this;
-    }
-
     public function evaluate(RuleContext $context): Proposition
     {
         $result = Proposition::create('', false);
