@@ -84,4 +84,14 @@ class Variable implements RuleElement
             in_array($this->value, $value, true)
         );
     }
+
+    public function between(self $variable): Proposition
+    {
+        $range = is_array($variable->value) ? $variable->value : [$variable->value, $variable->value];
+        [$min, $max] = $range;
+        return Proposition::create(
+            sprintf('%s_between_%s', $this->getName(), $variable->getName()),
+            $this->value >= $min && $this->value <= $max
+        );
+    }
 }

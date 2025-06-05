@@ -14,6 +14,7 @@ enum Operator implements RuleElement
     case GREATER_THAN_OR_EQUAL_TO;
     case LESS_THAN_OR_EQUAL_TO;
     case IN;
+    case BETWEEN;
 
     public function getName(): string
     {
@@ -38,6 +39,7 @@ enum Operator implements RuleElement
             'GREATER_THAN_OR_EQUAL_TO' => self::GREATER_THAN_OR_EQUAL_TO,
             'LESS_THAN_OR_EQUAL_TO' => self::LESS_THAN_OR_EQUAL_TO,
             'IN' => self::IN,
+            'BETWEEN' => self::BETWEEN,
         };
     }
 

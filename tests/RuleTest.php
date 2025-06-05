@@ -93,4 +93,28 @@ class RuleTest extends TestCase
         self::assertTrue($result->isRight());
         self::assertTrue($result->get()->getValue());
     }
+
+    public function testEvaluateBetweenOperator(): void
+    {
+        $rule = new Rule('betweenRule');
+        $rule->variable('range', [1, 10])
+            ->variable('value')
+            ->between();
+
+        $context = new RuleContext();
+        $context->variable('value', 5);
+
+        $result = $rule->evaluate($context);
+
+        self::assertTrue($result->isRight());
+        self::assertTrue($result->get()->getValue());
+
+        $contextInvalid = new RuleContext();
+        $contextInvalid->variable('value', 15);
+
+        $resultInvalid = $rule->evaluate($contextInvalid);
+
+        self::assertTrue($resultInvalid->isLeft());
+        self::assertFalse($resultInvalid->getLeft()->getValue());
+    }
 }
