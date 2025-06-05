@@ -12,14 +12,18 @@ class RulesetTest extends TestCase
     {
         $ruleset = RuleFixtureBuilder::some()->withTrueProposition()->get();
 
-        $this->assertTrue($ruleset->evaluate(new RuleContext())->getValue());
+        $result = $ruleset->evaluate(new RuleContext());
+        $this->assertTrue($result->isRight());
+        $this->assertTrue($result->get()->getValue());
     }
 
     public function testShouldEvaluationFail(): void
     {
         $ruleset = RuleFixtureBuilder::some()->withFalseProposition()->get();
 
-        $this->assertFalse($ruleset->evaluate(new RuleContext())->getValue());
+        $result = $ruleset->evaluate(new RuleContext());
+        $this->assertTrue($result->isLeft());
+        $this->assertFalse($result->getLeft()->getValue());
     }
 
 }

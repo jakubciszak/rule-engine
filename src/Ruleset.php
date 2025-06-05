@@ -2,6 +2,8 @@
 
 namespace JakubCiszak\RuleEngine;
 
+use Munus\Control\Either;
+
 class Ruleset
 {
     /**
@@ -15,15 +17,16 @@ class Ruleset
         $this->rules = $rules;
     }
 
-    public function evaluate(RuleContext $context): Proposition
+    public function evaluate(RuleContext $context): Either
     {
-        $result = Proposition::create('', false);
+        $result = Either::right(Proposition::success());
         foreach ($this->rules as $rule) {
             $result = $rule->evaluate($context);
-            if ($result->getValue() === false) {
+            if ($result->isLeft()) {
                 return $result;
             }
         }
+
         return $result;
     }
 }
