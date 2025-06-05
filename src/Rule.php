@@ -107,7 +107,7 @@ class Rule
 
     private function isPropositionOrVariable(RuleElement $element): bool
     {
-        return $element->getType()->isOnOf(RuleElementType::PROPOSITION, RuleElementType::VARIABLE);
+        return $element->getType()->isOneOf(RuleElementType::PROPOSITION, RuleElementType::VARIABLE);
     }
 
     private function process(GenericList $elements): Proposition
@@ -133,7 +133,7 @@ class Rule
 
     private function isOperator(RuleElement $ruleElement): bool
     {
-        return $ruleElement->getType()->isOnOf(RuleElementType::OPERATOR);
+        return $ruleElement->getType()->isOneOf(RuleElementType::OPERATOR);
     }
 
     private function processOperator(array &$stack, Operator $ruleElement): void
