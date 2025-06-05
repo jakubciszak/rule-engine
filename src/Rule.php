@@ -66,6 +66,11 @@ class Rule
     {
         return $this->addElement(Operator::IN);
     }
+
+    public function between(): self
+    {
+        return $this->addElement(Operator::BETWEEN);
+    }
     
     public function addElement(RuleElement $element): self
     {

@@ -52,4 +52,14 @@ class VariableTest extends TestCase
         $this->assertTrue($valid->in($variable2)->getValue());
         $this->assertFalse($invalid->in($variable2)->getValue());
     }
+
+    public function testVariableBetween(): void
+    {
+        $valid = Variable::create('variable1', 5);
+        $invalid = Variable::create('variable1', 15);
+        $range = Variable::create('range', [1, 10]);
+
+        $this->assertTrue($valid->between($range)->getValue());
+        $this->assertFalse($invalid->between($range)->getValue());
+    }
 }
