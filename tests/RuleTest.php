@@ -52,9 +52,10 @@ class RuleTest extends TestCase
             ->variable('state', 'active')
             ->variable('invalidState', 'inactive');
 
-        $proposition = $rule->evaluate($context);
+        $result = $rule->evaluate($context);
 
-        self::assertFalse($proposition->getValue());
+        self::assertTrue($result->isLeft());
+        self::assertFalse($result->getLeft()->getValue());
     }
 
     public function testShouldEvaluationSuccess(): void
@@ -87,8 +88,9 @@ class RuleTest extends TestCase
             ->variable('id', 1)
             ->proposition('ruleProposition', fn () => false);
 
-        $proposition = $rule->evaluate($context);
+        $result = $rule->evaluate($context);
 
-        self::assertTrue($proposition->getValue());
+        self::assertTrue($result->isRight());
+        self::assertTrue($result->get()->getValue());
     }
 }
