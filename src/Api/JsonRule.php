@@ -33,18 +33,18 @@ final class JsonRule
         $context = new RuleContext();
         $rule = new Rule('json_rule');
 
-        self::parseExpression($rules, $rule, $context, $data);
+        self::parseExpression($rules, $rule, $data);
 
         $result = $rule->evaluate($context);
 
         return $result->isRight();
     }
 
-    private static function parseExpression(mixed $expr, Rule $rule, RuleContext $context, array $data): void
+    private static function parseExpression(mixed $expr, Rule $rule, array $data): void
     {
         if (is_array($expr)) {
             if (array_key_exists('var', $expr)) {
-                self::addVariable($expr['var'], $rule, $context, $data);
+                self::addVariable($expr['var'], $rule, $data);
                 return;
             }
 
@@ -53,25 +53,25 @@ final class JsonRule
                 $values = (array) $expr[$operator];
 
                 match ($operator) {
-                    'and', 'or' => self::parseLogical($operator, $values, $rule, $context, $data),
-                    '!', 'not' => self::parseNot($values[0], $rule, $context, $data),
-                    '==', '!=', '>', '<', '>=', '<=', 'in' => self::parseComparison($operator, $values, $rule, $context, $data),
-                    default => self::addConstant($expr, $rule, $context)
+                    'and', 'or' => self::parseLogical($operator, $values, $rule, $data),
+                    '!', 'not' => self::parseNot($values[0], $rule, $data),
+                    '==', '!=', '>', '<', '>=', '<=', 'in' => self::parseComparison($operator, $values, $rule, $data),
+                    default => self::addConstant($expr, $rule)
                 };
                 return;
             }
         }
 
         if (!is_null($expr)) {
-            self::addConstant($expr, $rule, $context);
+            self::addConstant($expr, $rule);
         }
     }
 
-    private static function parseLogical(string $operator, array $values, Rule $rule, RuleContext $context, array $data): void
+    private static function parseLogical(string $operator, array $values, Rule $rule, array $data): void
     {
         $first = true;
         foreach ($values as $value) {
-            self::parseExpression($value, $rule, $context, $data);
+            self::parseExpression($value, $rule, $data);
             if ($first) {
                 $first = false;
                 continue;
@@ -80,16 +80,16 @@ final class JsonRule
         }
     }
 
-    private static function parseNot(mixed $value, Rule $rule, RuleContext $context, array $data): void
+    private static function parseNot(mixed $value, Rule $rule, array $data): void
     {
-        self::parseExpression($value, $rule, $context, $data);
+        self::parseExpression($value, $rule, $data);
         $rule->addElement(Operator::NOT);
     }
 
-    private static function parseComparison(string $operator, array $values, Rule $rule, RuleContext $context, array $data): void
+    private static function parseComparison(string $operator, array $values, Rule $rule, array $data): void
     {
-        self::parseExpression($values[1] ?? null, $rule, $context, $data);
-        self::parseExpression($values[0] ?? null, $rule, $context, $data);
+        self::parseExpression($values[1] ?? null, $rule, $data);
+        self::parseExpression($values[0] ?? null, $rule, $data);
 
         $op = match ($operator) {
             '==' => Operator::EQUAL_TO,
@@ -104,17 +104,15 @@ final class JsonRule
         $rule->addElement($op);
     }
 
-    private static function addVariable(string $path, Rule $rule, RuleContext $context, array $data): void
+    private static function addVariable(string $path, Rule $rule, array $data): void
     {
-        $rule->variable($path);
-        $context->variable($path, self::extractVar($data, $path));
+        $rule->variable($path, self::extractVar($data, $path));
     }
 
-    private static function addConstant(mixed $value, Rule $rule, RuleContext $context): void
+    private static function addConstant(mixed $value, Rule $rule): void
     {
         $name = '#const' . ++self::$constCounter;
-        $rule->variable($name);
-        $context->variable($name, $value);
+        $rule->variable($name, $value);
     }
 
     private static function extractVar(array $data, string $path): mixed
