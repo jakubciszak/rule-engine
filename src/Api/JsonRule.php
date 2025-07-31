@@ -37,9 +37,7 @@ final class JsonRule
 
         $result = $rule->evaluate($context);
 
-        return $result->isRight()
-            ? $result->get()->getValue()
-            : $result->getLeft()->getValue();
+        return $result->isRight();
     }
 
     private static function parseExpression(mixed $expr, Rule $rule, RuleContext $context, array $data): void
