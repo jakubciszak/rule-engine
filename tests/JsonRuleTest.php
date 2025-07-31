@@ -75,4 +75,36 @@ final class JsonRuleTest extends TestCase
 
         self::assertTrue(JsonRule::evaluate($rules, $data));
     }
+
+    public function testEvaluateRulesetArray(): void
+    {
+        $ruleset = [
+            'rule1' => ['and' => [
+                ['<' => [['var' => 'temp'], 110]],
+                ['==' => [['var' => 'pie.filling'], 'apple']],
+            ]],
+            'rule2' => ['and' => [
+                ['<' => [['var' => 'temp'], 110]],
+                ['==' => [['var' => 'pie.filling'], 'apple']],
+            ]],
+        ];
+
+        $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
+
+        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+    }
+
+    public function testEvaluateRulesetJson(): void
+    {
+        $ruleset = [
+            'rule1' => ['==' => [['var' => 'a'], 1]],
+            'rule2' => ['>' => [['var' => 'b'], 2]],
+        ];
+        $data = ['a' => 1, 'b' => 3];
+
+        $rulesetJson = json_encode($ruleset, JSON_THROW_ON_ERROR);
+        $dataJson = json_encode($data, JSON_THROW_ON_ERROR);
+
+        self::assertTrue(JsonRule::evaluate($rulesetJson, $dataJson));
+    }
 }

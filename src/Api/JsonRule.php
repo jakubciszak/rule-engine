@@ -2,11 +2,12 @@
 
 namespace JakubCiszak\RuleEngine\Api;
 
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset};
 
 final class JsonRule
 {
     private static int $constCounter = 0;
+    private const OPERATORS = ['and', 'or', '!', 'not', '==', '!=', '>', '<', '>=', '<=', 'in'];
 
     private function __construct()
     {
@@ -31,12 +32,26 @@ final class JsonRule
         }
 
         $context = new RuleContext();
+
+        if (is_array($rules) && self::isRulesetArray($rules)) {
+            $ruleObjects = array_map(
+                static function (string $name) use ($rules, $data): Rule {
+                    $rule = new Rule($name);
+                    self::parseExpression($rules[$name], $rule, $data);
+
+                    return $rule;
+                },
+                array_keys($rules)
+            );
+
+            $ruleset = new Ruleset(...$ruleObjects);
+            $result = $ruleset->evaluate($context);
+            return $result->isRight();
+        }
+
         $rule = new Rule('json_rule');
-
         self::parseExpression($rules, $rule, $data);
-
         $result = $rule->evaluate($context);
-
         return $result->isRight();
     }
 
@@ -69,15 +84,17 @@ final class JsonRule
 
     private static function parseLogical(string $operator, array $values, Rule $rule, array $data): void
     {
-        $first = true;
-        foreach ($values as $value) {
-            self::parseExpression($value, $rule, $data);
-            if ($first) {
-                $first = false;
-                continue;
-            }
-            $rule->addElement(Operator::create(strtoupper($operator)));
-        }
+        array_map(
+            static function (mixed $value, int $index) use ($operator, $rule, $data): void {
+                self::parseExpression($value, $rule, $data);
+
+                if ($index > 0) {
+                    $rule->addElement(Operator::create(strtoupper($operator)));
+                }
+            },
+            $values,
+            array_keys($values)
+        );
     }
 
     private static function parseNot(mixed $value, Rule $rule, array $data): void
@@ -129,5 +146,19 @@ final class JsonRule
         }
 
         return $value;
+    }
+
+    private static function isRulesetArray(array $rules): bool
+    {
+        if (count($rules) === 0) {
+            return false;
+        }
+
+        if (count($rules) === 1) {
+            $key = array_key_first($rules);
+            return !in_array($key, self::OPERATORS, true);
+        }
+
+        return true;
     }
 }
