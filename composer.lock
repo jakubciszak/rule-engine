@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c97ad07721c5258a66a5a9de292a7580",
+    "content-hash": "f696581ac327fd19de106ac7eb3772c7",
     "packages": [
         {
             "name": "munusphp/munus",
@@ -1785,7 +1785,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3"
+        "php": "^8.4"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

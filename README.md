@@ -9,7 +9,7 @@ This model is based on rule archetype pattern from book ["Enterprise Patterns an
 
 ## Requirements
 
-- PHP 8.3 or higher
+ - PHP 8.4 or higher
 - Composer
 
 ## Installation
