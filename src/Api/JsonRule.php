@@ -13,14 +13,14 @@ final class JsonRule
     }
 
     /**
-     * Apply JSON logic rules to provided data.
+     * Evaluate JSON logic rules using provided data.
      *
      * @param array|string $rules
      * @param array|string $data
      *
      * @throws \JsonException
      */
-    public static function apply(array|string $rules, array|string $data = []): bool
+    public static function evaluate(array|string $rules, array|string $data = []): bool
     {
         if (is_string($rules)) {
             $rules = json_decode($rules, true, 512, JSON_THROW_ON_ERROR);
