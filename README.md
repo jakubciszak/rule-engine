@@ -90,6 +90,36 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
 
 This JSON can be passed to the `JsonRPN` context to get the evaluation result in the same structure.
 
+### JsonRule format
+
+`JsonRule` accepts rules defined using a JSON structure that resembles infix notation. Operators are written as keys and their arguments are provided in nested arrays.
+
+```php
+use JakubCiszak\RuleEngine\Api\JsonRule;
+
+$rules = ['and' => [
+    ['<' => [['var' => 'temp'], 110]],
+    ['==' => [['var' => 'pie.filling'], 'apple']],
+]];
+
+$data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
+
+$result = JsonRule::evaluate($rules, $data); // true
+```
+
+You can also pass a set of named rules for evaluation:
+
+```php
+$ruleset = [
+    'rule1' => ['==' => [['var' => 'a'], 1]],
+    'rule2' => ['>' => [['var' => 'b'], 2]],
+];
+
+$data = ['a' => 1, 'b' => 3];
+
+JsonRule::evaluate($ruleset, $data); // true
+```
+
 ## Development
 
 ### Running Tests
