@@ -61,6 +61,35 @@ $context = new RuleContext();
 $result = $rule->evaluate($context);
 ```
 
+### JsonRPN context
+
+Rules can also be defined using JSON in RPN order. The example below presents two rules:
+
+```json
+{
+  "rules": [
+    {
+      "name": "rule1",
+      "elements": [
+        {"type": "variable", "name": "a"},
+        {"type": "variable", "name": "b"},
+        {"type": "operator", "name": "EQUAL_TO"}
+      ]
+    },
+    {
+      "name": "rule2",
+      "elements": [
+        {"type": "variable", "name": "amount"},
+        {"type": "variable", "name": "max"},
+        {"type": "operator", "name": "GREATER_THAN"}
+      ]
+    }
+  ]
+}
+```
+
+This JSON can be passed to the `JsonRPN` context to get the evaluation result in the same structure.
+
 ## Development
 
 ### Running Tests
