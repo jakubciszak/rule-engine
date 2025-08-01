@@ -90,6 +90,21 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
 
 This JSON can be passed to the `JsonRPN` context to get the evaluation result in the same structure.
 
+#### Rule actions
+
+Each rule may include simple actions executed when the rule is evaluated. Actions are expressed as strings:
+
+```
+"var.count + 5"
+"var.name = John"
+"var.total + var.amount"
+```
+
+Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
+
+When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
+
+
 ### JsonRule format
 
 `JsonRule` accepts rules defined using a JSON structure that resembles infix notation. Operators are written as keys and their arguments are provided in nested arrays.

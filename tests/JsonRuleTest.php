@@ -107,4 +107,89 @@ final class JsonRuleTest extends TestCase
 
         self::assertTrue(JsonRule::evaluate($rulesetJson, $dataJson));
     }
+
+    public function testEvaluateRulesetWithActions(): void
+    {
+        $ruleset = [
+            'rule1' => [
+                '==' => [['var' => 'a'], 1],
+                'actions' => ['var.count + 1'],
+            ],
+            'rule2' => [
+                '==' => [['var' => 'count'], 1],
+            ],
+        ];
+
+        $data = ['a' => 1, 'count' => 0];
+
+        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+    }
+
+    public function testActionUsingVariableReference(): void
+    {
+        $ruleset = [
+            'rule1' => [
+                '==' => [['var' => 'x'], 1],
+                'actions' => ['var.count + var.increment'],
+            ],
+            'rule2' => [
+                '==' => [['var' => 'count'], 3],
+            ],
+        ];
+
+        $data = ['x' => 1, 'count' => 1, 'increment' => 2];
+
+        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+    }
+
+    public function testActionSubtract(): void
+    {
+        $ruleset = [
+            'rule1' => [
+                '==' => [['var' => 'a'], 1],
+                'actions' => ['var.count - 2'],
+            ],
+            'rule2' => [
+                '==' => [['var' => 'count'], 8],
+            ],
+        ];
+
+        $data = ['a' => 1, 'count' => 10];
+
+        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+    }
+
+    public function testActionConcatenate(): void
+    {
+        $ruleset = [
+            'rule1' => [
+                '==' => [['var' => 'name'], 'John'],
+                'actions' => ['var.name . Doe'],
+            ],
+            'rule2' => [
+                '==' => [['var' => 'name'], 'JohnDoe'],
+            ],
+        ];
+
+        $data = ['name' => 'John'];
+
+        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+    }
+
+    public function testActionSet(): void
+    {
+        $ruleset = [
+            'rule1' => [
+                '==' => [['var' => 'a'], 1],
+                'actions' => ['var.status = done'],
+            ],
+            'rule2' => [
+                '==' => [['var' => 'status'], 'done'],
+            ],
+        ];
+
+        $data = ['a' => 1, 'status' => 'pending'];
+
+        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+    }
 }
