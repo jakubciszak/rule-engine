@@ -3,7 +3,8 @@
 namespace JakubCiszak\RuleEngine\Api;
 
 use InvalidArgumentException;
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition, Action, ActivityRule, RuleInterface};
+use JakubCiszak\RuleEngine\Api\ActionParser;
 
 final class JsonRPN
 {
@@ -38,7 +39,7 @@ final class JsonRPN
         return json_encode(['results' => $results], JSON_THROW_ON_ERROR);
     }
 
-    private static function createRule(array $data): Rule
+    private static function createRule(array $data): RuleInterface
     {
         $rule = new Rule($data['name'] ?? uniqid('rule_', true));
         foreach ($data['elements'] ?? [] as $element) {
@@ -58,7 +59,24 @@ final class JsonRPN
             }
             throw new InvalidArgumentException('Invalid rule element');
         }
-        return $rule;
+        $resultRule = $rule;
+
+        if (!empty($data['actions']) && is_array($data['actions'])) {
+            $actions = array_map(
+                static fn(string $expr): Action => ActionParser::parse($expr),
+                $data['actions']
+            );
+
+            $activity = static function (RuleContext $context) use ($actions): void {
+                foreach ($actions as $action) {
+                    $action->execute($context);
+                }
+            };
+
+            $resultRule = new ActivityRule($rule, $activity);
+        }
+
+        return $resultRule;
     }
 
     private static function createContext(array $data): RuleContext

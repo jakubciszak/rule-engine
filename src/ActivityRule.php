@@ -11,6 +11,7 @@ final class ActivityRule implements RuleInterface
 {
     /** @var T */
     private readonly Closure $activity;
+    public readonly string $name;
 
     /**
      * @param RuleInterface $rule
@@ -21,6 +22,7 @@ final class ActivityRule implements RuleInterface
         callable $activity
     ) {
         $this->activity = Closure::fromCallable($activity);
+        $this->name = property_exists($rule, 'name') ? $rule->name : '';
     }
 
     public function and(): self
