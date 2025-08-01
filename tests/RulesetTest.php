@@ -2,6 +2,7 @@
 
 namespace JakubCiszak\RuleEngine\Tests;
 
+use JakubCiszak\RuleEngine\Proposition;
 use JakubCiszak\RuleEngine\RuleContext;
 use JakubCiszak\RuleEngine\Tests\Fixtures\RuleFixtureBuilder;
 use PHPUnit\Framework\TestCase;
@@ -13,8 +14,8 @@ class RulesetTest extends TestCase
         $ruleset = RuleFixtureBuilder::some()->withTrueProposition()->get();
 
         $result = $ruleset->evaluate(new RuleContext());
-        $this->assertTrue($result->isRight());
-        $this->assertTrue($result->get()->getValue());
+        $this->assertInstanceOf(Proposition::class, $result);
+        $this->assertTrue($result->getValue());
     }
 
     public function testShouldEvaluationFail(): void
@@ -22,8 +23,8 @@ class RulesetTest extends TestCase
         $ruleset = RuleFixtureBuilder::some()->withFalseProposition()->get();
 
         $result = $ruleset->evaluate(new RuleContext());
-        $this->assertTrue($result->isLeft());
-        $this->assertFalse($result->getLeft()->getValue());
+        $this->assertInstanceOf(Proposition::class, $result);
+        $this->assertFalse($result->getValue());
     }
 
 }

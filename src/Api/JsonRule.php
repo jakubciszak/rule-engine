@@ -46,13 +46,13 @@ final class JsonRule
 
             $ruleset = new Ruleset(...$ruleObjects);
             $result = $ruleset->evaluate($context);
-            return $result->isRight();
+            return $result->getValue();
         }
 
         $rule = new Rule('json_rule');
         self::parseExpression($rules, $rule, $data);
         $result = $rule->evaluate($context);
-        return $result->isRight();
+        return $result->getValue();
     }
 
     private static function parseExpression(mixed $expr, Rule $rule, array $data): void

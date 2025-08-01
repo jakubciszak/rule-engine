@@ -3,7 +3,6 @@
 namespace JakubCiszak\RuleEngine;
 
 use Munus\Collection\GenericList;
-use Munus\Control\Either;
 
 class Rule
 {
@@ -73,14 +72,10 @@ class Rule
         return $this;
     }
 
-    public function evaluate(RuleContext $context): Either
+    public function evaluate(RuleContext $context): Proposition
     {
         $this->elements->forEach(fn (RuleElement $element) => $this->prepareElement($element, $context));
-        $result = $this->process($this->elements);
-
-        return $result->getValue()
-            ? Either::right($result)
-            : Either::left($result);
+        return $this->process($this->elements);
     }
 
     private function prepareElement(RuleElement $element, RuleContext $context): bool
