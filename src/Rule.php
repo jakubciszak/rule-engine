@@ -4,7 +4,7 @@ namespace JakubCiszak\RuleEngine;
 
 use Munus\Collection\GenericList;
 
-class Rule
+class Rule implements RuleInterface
 {
     /**
      * @param GenericList<RuleElement> $elements
