@@ -5,12 +5,12 @@ namespace JakubCiszak\RuleEngine;
 class Ruleset
 {
     /**
-     * @var Rule[]
+     * @var RuleInterface[]
      */
     private array $rules;
 
     public function __construct(
-        Rule ...$rules
+        RuleInterface ...$rules
     ) {
         $this->rules = $rules;
     }

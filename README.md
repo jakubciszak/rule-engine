@@ -102,6 +102,8 @@ Each rule may include simple actions executed when the rule is evaluated. Action
 
 Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
 
+When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
+
 
 ### JsonRule format
 

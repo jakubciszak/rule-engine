@@ -2,7 +2,8 @@
 
 namespace JakubCiszak\RuleEngine\Api;
 
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset, Action, ActivityRule, RuleInterface};
+use JakubCiszak\RuleEngine\Api\ActionParser;
 
 final class JsonRule
 {
@@ -31,15 +32,18 @@ final class JsonRule
             $data = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
         }
 
-        $context = new RuleContext();
+        $context = self::createContext($data);
 
         if (is_array($rules) && self::isRulesetArray($rules)) {
             $ruleObjects = array_map(
-                static function (string $name) use ($rules, $data): Rule {
-                    $rule = new Rule($name);
-                    self::parseExpression($rules[$name], $rule, $data);
+                static function (string $name) use ($rules, $data): RuleInterface {
+                    $definition = $rules[$name];
+                    $actions = self::extractActions($definition);
 
-                    return $rule;
+                    $rule = new Rule($name);
+                    self::parseExpression($definition, $rule, $data);
+
+                    return $actions === [] ? $rule : self::decorateWithActions($rule, $actions);
                 },
                 array_keys($rules)
             );
@@ -49,9 +53,18 @@ final class JsonRule
             return $result->getValue();
         }
 
+        if (is_array($rules)) {
+            $actions = self::extractActions($rules);
+        } else {
+            $actions = [];
+        }
+
         $rule = new Rule('json_rule');
         self::parseExpression($rules, $rule, $data);
-        $result = $rule->evaluate($context);
+
+        $executor = $actions === [] ? $rule : self::decorateWithActions($rule, $actions);
+
+        $result = $executor->evaluate($context);
         return $result->getValue();
     }
 
@@ -160,5 +173,55 @@ final class JsonRule
         }
 
         return true;
+    }
+
+    /**
+     * @param array $definition
+     * @return string[]
+     */
+    private static function extractActions(array &$definition): array
+    {
+        $actions = [];
+
+        if (isset($definition['actions']) && is_array($definition['actions'])) {
+            $actions = $definition['actions'];
+            unset($definition['actions']);
+        }
+
+        return $actions;
+    }
+
+    /**
+     * @param Rule $rule
+     * @param string[] $actions
+     */
+    private static function decorateWithActions(Rule $rule, array $actions): RuleInterface
+    {
+        $parsed = array_map(
+            static fn(string $expr): Action => ActionParser::parse($expr),
+            $actions
+        );
+
+        $activity = static function (RuleContext $context) use ($parsed): void {
+            foreach ($parsed as $action) {
+                $action->execute($context);
+            }
+        };
+
+        return new ActivityRule($rule, $activity);
+    }
+
+    private static function createContext(array $data): RuleContext
+    {
+        $context = new RuleContext();
+        foreach ($data as $name => $value) {
+            if (is_bool($value)) {
+                $context->proposition($name, $value);
+            } else {
+                $context->variable($name, $value);
+            }
+        }
+
+        return $context;
     }
 }
