@@ -5,6 +5,7 @@ namespace JakubCiszak\RuleEngine\Tests;
 use DateTimeImmutable;
 use JakubCiszak\RuleEngine\Rule;
 use JakubCiszak\RuleEngine\RuleContext;
+use JakubCiszak\RuleEngine\Proposition;
 use PHPUnit\Framework\TestCase;
 
 class RuleTest extends TestCase
@@ -54,8 +55,8 @@ class RuleTest extends TestCase
 
         $result = $rule->evaluate($context);
 
-        self::assertTrue($result->isLeft());
-        self::assertFalse($result->getLeft()->getValue());
+        self::assertInstanceOf(Proposition::class, $result);
+        self::assertFalse($result->getValue());
     }
 
     public function testShouldEvaluationSuccess(): void
@@ -90,7 +91,7 @@ class RuleTest extends TestCase
 
         $result = $rule->evaluate($context);
 
-        self::assertTrue($result->isRight());
-        self::assertTrue($result->get()->getValue());
+        self::assertInstanceOf(Proposition::class, $result);
+        self::assertTrue($result->getValue());
     }
 }

@@ -32,10 +32,7 @@ final class JsonRPN
         foreach ($rulesData['rules'] as $ruleData) {
             $rule = self::createRule($ruleData);
             $result = $rule->evaluate($context);
-            $value = $result->isRight()
-                ? $result->get()->getValue()
-                : $result->getLeft()->getValue();
-            $results[] = ['name' => $rule->name, 'value' => $value];
+            $results[] = ['name' => $rule->name, 'value' => $result->getValue()];
         }
 
         return json_encode(['results' => $results], JSON_THROW_ON_ERROR);
