@@ -104,6 +104,44 @@ Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) a
 
 When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
 
+#### JsonRPN example
+
+```json
+{
+  "rules": [
+    {
+      "name": "rule1",
+      "elements": [
+        {"type": "variable", "name": "a"},
+        {"type": "variable", "name": "b"},
+        {"type": "operator", "name": "EQUAL_TO"}
+      ],
+      "actions": ["var.count + 1"]
+    }
+  ]
+}
+```
+
+Evaluating the JSON above with `{ "a": 1, "b": 1, "count": 0 }` updates `count` to `1` when the rule evaluates to `true`.
+
+#### JsonRule example
+
+```php
+$ruleset = [
+    'rule1' => [
+        '==' => [['var' => 'a'], 1],
+        'actions' => ['var.count + 1'],
+    ],
+    'rule2' => [
+        '==' => [['var' => 'count'], 1],
+    ],
+];
+
+$data = ['a' => 1, 'count' => 0];
+
+JsonRule::evaluate($ruleset, $data); // true
+```
+
 
 ### JsonRule format
 
