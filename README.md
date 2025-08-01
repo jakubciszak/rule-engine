@@ -90,20 +90,6 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
 
 This JSON can be passed to the `JsonRPN` context to get the evaluation result in the same structure.
 
-#### Rule actions
-
-Each rule may include simple actions executed when the rule is evaluated. Actions are expressed as strings:
-
-```
-"var.count + 5"
-"var.name = John"
-"var.total + var.amount"
-```
-
-Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
-
-When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
-
 
 ### JsonRule format
 
@@ -134,6 +120,59 @@ $data = ['a' => 1, 'b' => 3];
 
 JsonRule::evaluate($ruleset, $data); // true
 ```
+
+### Rule actions
+
+Each rule may include simple actions executed when the rule is evaluated. Actions are expressed as strings:
+
+```
+"var.count + 5"
+"var.name = John"
+"var.total + var.amount"
+```
+
+Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
+
+When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
+
+#### JsonRPN example
+
+```json
+{
+  "rules": [
+    {
+      "name": "rule1",
+      "elements": [
+        {"type": "variable", "name": "a"},
+        {"type": "variable", "name": "b"},
+        {"type": "operator", "name": "EQUAL_TO"}
+      ],
+      "actions": ["var.count + 1"]
+    }
+  ]
+}
+```
+
+Evaluating the JSON above with `{ "a": 1, "b": 1, "count": 0 }` updates `count` to `1` when the rule evaluates to `true`.
+
+#### JsonRule example
+
+```php
+$ruleset = [
+    'rule1' => [
+        '==' => [['var' => 'a'], 1],
+        'actions' => ['var.count + 1'],
+    ],
+    'rule2' => [
+        '==' => [['var' => 'count'], 1],
+    ],
+];
+
+$data = ['a' => 1, 'count' => 0];
+
+JsonRule::evaluate($ruleset, $data); // true
+```
+
 
 ## Development
 
