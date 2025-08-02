@@ -54,7 +54,7 @@ final class FlatRuleAPITest extends TestCase
                         ['type' => 'operator', 'name' => 'EQUAL_TO'],
                     ],
                     'actions' => [
-                        'var.count + 1',
+                        '.count + 1',
                     ],
                 ],
                 [
@@ -93,7 +93,7 @@ final class FlatRuleAPITest extends TestCase
                         ['type' => 'operator', 'name' => 'EQUAL_TO'],
                     ],
                     'actions' => [
-                        'var.count + var.increment',
+                        '.count + .increment',
                     ],
                 ],
                 [
@@ -133,7 +133,7 @@ final class FlatRuleAPITest extends TestCase
                         ['type' => 'operator', 'name' => 'EQUAL_TO'],
                     ],
                     'actions' => [
-                        'var.count - 2',
+                        '.count - 2',
                     ],
                 ],
                 [
@@ -172,7 +172,7 @@ final class FlatRuleAPITest extends TestCase
                         ['type' => 'operator', 'name' => 'EQUAL_TO'],
                     ],
                     'actions' => [
-                        'var.name . Doe',
+                        '.name . Doe',
                     ],
                 ],
                 [
@@ -210,7 +210,7 @@ final class FlatRuleAPITest extends TestCase
                         ['type' => 'operator', 'name' => 'EQUAL_TO'],
                     ],
                     'actions' => [
-                        'var.status = done',
+                        '.status = done',
                     ],
                 ],
                 [

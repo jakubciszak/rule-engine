@@ -129,7 +129,7 @@ final class NestedRuleApiTest extends TestCase
         $ruleset = [
             'rule1' => [
                 '==' => [['var' => 'a'], 1],
-                'actions' => ['var.count + 1'],
+                'actions' => ['.count + 1'],
             ],
             'rule2' => [
                 '==' => [['var' => 'count'], 1],
@@ -147,7 +147,7 @@ final class NestedRuleApiTest extends TestCase
         $ruleset = [
             'rule1' => [
                 '==' => [['var' => 'x'], 1],
-                'actions' => ['var.count + var.increment'],
+                'actions' => ['.count + .increment'],
             ],
             'rule2' => [
                 '==' => [['var' => 'count'], 3],
@@ -165,7 +165,7 @@ final class NestedRuleApiTest extends TestCase
         $ruleset = [
             'rule1' => [
                 '==' => [['var' => 'a'], 1],
-                'actions' => ['var.count - 2'],
+                'actions' => ['.count - 2'],
             ],
             'rule2' => [
                 '==' => [['var' => 'count'], 8],
@@ -183,7 +183,7 @@ final class NestedRuleApiTest extends TestCase
         $ruleset = [
             'rule1' => [
                 '==' => [['var' => 'name'], 'John'],
-                'actions' => ['var.name . Doe'],
+                'actions' => ['.name . Doe'],
             ],
             'rule2' => [
                 '==' => [['var' => 'name'], 'JohnDoe'],
@@ -201,7 +201,7 @@ final class NestedRuleApiTest extends TestCase
         $ruleset = [
             'rule1' => [
                 '==' => [['var' => 'a'], 1],
-                'actions' => ['var.status = done'],
+                'actions' => ['.status = done'],
             ],
             'rule2' => [
                 '==' => [['var' => 'status'], 'done'],

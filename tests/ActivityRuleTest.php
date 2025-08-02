@@ -39,4 +39,31 @@ class ActivityRuleTest extends TestCase
         $this->assertInstanceOf(Variable::class, $variable);
         $this->assertTrue($variable->getValue());
     }
+
+    public function testActivityNotExecutedWhenRuleFails(): void
+    {
+        $rule = new Rule('someRule');
+        $rule->variable('a')
+            ->variable('b')
+            ->equalTo();
+
+        $called = false;
+        $activity = function (RuleContext $context) use (&$called) {
+            $called = true;
+            $context->variable('activity', true);
+        };
+
+        $activityRule = new ActivityRule($rule, $activity);
+
+        $context = new RuleContext();
+        $context->variable('a', 1)
+            ->variable('b', 2);
+
+        $result = $activityRule->evaluate($context);
+
+        $this->assertFalse($result->getValue());
+        $this->assertFalse($called);
+        $variable = $context->findElement(Variable::create('activity'));
+        $this->assertNull($variable);
+    }
 }
