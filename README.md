@@ -193,12 +193,12 @@ StringRuleApi::evaluate($flags, $data); // true
 Each rule may include simple actions executed when the rule is evaluated. Actions are expressed as strings:
 
 ```
-"var.count + 5"
-"var.name = John"
-"var.total + var.amount"
+".count + 5"
+".name = John"
+".total + .amount"
 ```
 
-Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
+Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `.` reference variables from the evaluation context.
 
 When using `NestedRuleApi`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
 
@@ -214,7 +214,7 @@ When using `NestedRuleApi`, specify actions under the `actions` key alongside th
         {"type": "variable", "name": "b"},
         {"type": "operator", "name": "EQUAL_TO"}
       ],
-      "actions": ["var.count + 1"]
+       "actions": [".count + 1"]
     }
   ]
 }
@@ -235,7 +235,7 @@ FlatRuleAPI::evaluate($rules, $context);
 $ruleset = [
     'rule1' => [
         '==' => [['var' => 'a'], 1],
-        'actions' => ['var.count + 1'],
+        'actions' => ['.count + 1'],
     ],
     'rule2' => [
         '==' => [['var' => 'count'], 1],

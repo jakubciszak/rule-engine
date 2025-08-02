@@ -23,11 +23,11 @@ final class ActionParser
 
     private static function parseVariable(string $token): string
     {
-        if (!str_starts_with($token, 'var.')) {
+        if (!str_starts_with($token, '.')) {
             throw new InvalidArgumentException('Action target must be a variable');
         }
 
-        return substr($token, 4);
+        return substr($token, 1);
     }
 
     private static function parseOperator(string $token): ActionType
@@ -45,8 +45,8 @@ final class ActionParser
     {
         $token = trim($token);
 
-        if (str_starts_with($token, 'var.')) {
-            return Variable::create(substr($token, 4));
+        if (str_starts_with($token, '.')) {
+            return Variable::create(substr($token, 1));
         }
 
         if (is_numeric($token)) {

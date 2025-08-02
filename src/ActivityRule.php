@@ -118,7 +118,9 @@ final class ActivityRule implements RuleInterface
     public function evaluate(RuleContext $context): Proposition
     {
         $result = $this->rule->evaluate($context);
-        ($this->activity)($context);
+        if ($result->getValue()) {
+            ($this->activity)($context);
+        }
 
         return $result;
     }
