@@ -1,11 +1,21 @@
 
 # Rule Engine
 
-Rule Engine is a PHP library designed to evaluate complex rules and propositions. It supports various operators and can handle propositions and variables.
+Rule Engine turns business logic into small, testable building blocks.  
+Start in minutes and choose the API that fits your workflow:
 
-This model is based on rule archetype pattern from book ["Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML"](https://amzn.eu/d/arcbwKu) by Jim Arlow and Ila Neustadt.
+- **Fluent PHP API** – build rules through a chainable DSL directly in code.
+- **JSON APIs** – describe rules as data using `JsonRPN` or `JsonRule`.
 
+With either style you get the same evaluation engine and can mix them as your project grows.
 
+## How it works
+
+Rule Engine implements the *Rule Archetype Pattern* from the book
+["Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML"](https://amzn.eu/d/arcbwKu)
+by Jim Arlow and Ila Neustadt.  
+Rules are translated into [Reverse Polish Notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) and
+evaluated with a stack-based interpreter, making complex conditions fast and easy to reason about.
 
 ## Requirements
 
@@ -103,6 +113,44 @@ Each rule may include simple actions executed when the rule is evaluated. Action
 Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
 
 When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
+
+#### JsonRPN example
+
+```json
+{
+  "rules": [
+    {
+      "name": "rule1",
+      "elements": [
+        {"type": "variable", "name": "a"},
+        {"type": "variable", "name": "b"},
+        {"type": "operator", "name": "EQUAL_TO"}
+      ],
+      "actions": ["var.count + 1"]
+    }
+  ]
+}
+```
+
+Evaluating the JSON above with `{ "a": 1, "b": 1, "count": 0 }` updates `count` to `1` when the rule evaluates to `true`.
+
+#### JsonRule example
+
+```php
+$ruleset = [
+    'rule1' => [
+        '==' => [['var' => 'a'], 1],
+        'actions' => ['var.count + 1'],
+    ],
+    'rule2' => [
+        '==' => [['var' => 'count'], 1],
+    ],
+];
+
+$data = ['a' => 1, 'count' => 0];
+
+JsonRule::evaluate($ruleset, $data); // true
+```
 
 
 ### JsonRule format
