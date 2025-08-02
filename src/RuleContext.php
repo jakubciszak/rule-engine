@@ -6,9 +6,7 @@ use Munus\Collection\Map;
 
 class RuleContext
 {
-    /**
-     * @param Map<RuleElement> $elements
-     */
+    /** @var Map<RuleElement> */
     private Map $elements;
 
     public function __construct()
