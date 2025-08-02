@@ -6,31 +6,23 @@ use InvalidArgumentException;
 use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition, Action, ActivityRule, RuleInterface};
 use JakubCiszak\RuleEngine\Api\ActionParser;
 
-final class JsonRPN
+final class FlatRuleAPI
 {
     private function __construct()
     {
     }
 
-    /**
-     * @param string $rulesetJson JSON describing rules in RPN notation
-     * @param string $contextJson JSON describing context variables and propositions
-     *
-     * @throws \JsonException
-     */
-    public static function evaluate(string $rulesetJson, string $contextJson = '{}'): string
+    public static function evaluate(array $rulesetData, array $contextData = []): string
     {
-        $rulesData = json_decode($rulesetJson, true, 512, JSON_THROW_ON_ERROR);
-        $contextData = json_decode($contextJson, true, 512, JSON_THROW_ON_ERROR);
 
-        if (!isset($rulesData['rules']) || !is_array($rulesData['rules'])) {
-            throw new InvalidArgumentException('Invalid rules JSON');
+        if (!isset($rulesetData['rules']) || !is_array($rulesetData['rules'])) {
+            throw new InvalidArgumentException('Invalid rules data');
         }
 
         $context = self::createContext($contextData);
         $results = [];
 
-        foreach ($rulesData['rules'] as $ruleData) {
+        foreach ($rulesetData['rules'] as $ruleData) {
             $rule = self::createRule($ruleData);
             $result = $rule->evaluate($context);
             $results[] = ['name' => $rule->name, 'value' => $result->getValue()];
@@ -83,7 +75,7 @@ final class JsonRPN
     {
         $context = new RuleContext();
         foreach ($data as $name => $value) {
-            if (is_bool($value)) {
+            if (is_bool($value) || is_callable($value)) {
                 $context->proposition($name, $value);
             } else {
                 $context->variable($name, $value);

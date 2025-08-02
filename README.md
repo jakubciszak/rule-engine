@@ -1,11 +1,17 @@
 
 # Rule Engine
 
-Rule Engine is a PHP library designed to evaluate complex rules and propositions. It supports various operators and can handle propositions and variables.
+Rule Engine lets you express business logic in plain PHP arrays and evaluate it with ease. 
+Pick the API that matches the shape of your data:
 
-This model is based on rule archetype pattern from book ["Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML"](https://amzn.eu/d/arcbwKu) by Jim Arlow and Ila Neustadt.
+- **FlatRuleAPI** – send a linear array in [Reverse Polish Notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) for fast stack-based evaluation.
+- **NestedRuleApi** – describe rules as nested associative arrays that read like infix notation.
 
+Both APIs accept arrays decoded from JSON and can work with callables inside the evaluation context, giving you a flexible way to run rules or trigger simple actions.
 
+## How it works
+
+The library implements the **Rule Archetype Pattern** from the book ["Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML"](https://amzn.eu/d/arcbwKu) by Jim Arlow and Ila Neustadt. Rules are composed of propositions, operators and optional actions. Depending on whether you use `FlatRuleAPI` or `NestedRuleApi`, the rule is converted to a uniform internal structure that the engine evaluates against the provided context.
 
 ## Requirements
 
@@ -61,7 +67,7 @@ $context = new RuleContext();
 $result = $rule->evaluate($context);
 ```
 
-### JsonRPN context
+### FlatRuleAPI context
 
 Rules can also be defined using JSON in RPN order. The example below presents two rules:
 
@@ -88,15 +94,24 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
 }
 ```
 
-This JSON can be passed to the `JsonRPN` context to get the evaluation result in the same structure.
-
-
-### JsonRule format
-
-`JsonRule` accepts rules defined using a JSON structure that resembles infix notation. Operators are written as keys and their arguments are provided in nested arrays.
+This JSON can be decoded and passed to the `FlatRuleAPI` context to get the evaluation result in the same structure.
 
 ```php
-use JakubCiszak\RuleEngine\Api\JsonRule;
+$rulesJson = '{"rules": [...]}';
+$contextJson = '{"a":1,"b":2}';
+$resultJson = FlatRuleAPI::evaluate(
+    json_decode($rulesJson, true, 512, JSON_THROW_ON_ERROR),
+    json_decode($contextJson, true, 512, JSON_THROW_ON_ERROR)
+);
+```
+
+
+### NestedRuleApi format
+
+`NestedRuleApi` accepts rules defined using a JSON structure that resembles infix notation. Operators are written as keys and their arguments are provided in nested arrays.
+
+```php
+use JakubCiszak\RuleEngine\Api\NestedRuleApi;
 
 $rules = ['and' => [
     ['<' => [['var' => 'temp'], 110]],
@@ -105,7 +120,7 @@ $rules = ['and' => [
 
 $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
 
-$result = JsonRule::evaluate($rules, $data); // true
+$result = NestedRuleApi::evaluate($rules, $data); // true
 ```
 
 You can also pass a set of named rules for evaluation:
@@ -118,7 +133,7 @@ $ruleset = [
 
 $data = ['a' => 1, 'b' => 3];
 
-JsonRule::evaluate($ruleset, $data); // true
+NestedRuleApi::evaluate($ruleset, $data); // true
 ```
 
 ### Rule actions
@@ -133,9 +148,9 @@ Each rule may include simple actions executed when the rule is evaluated. Action
 
 Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `var.` reference variables from the evaluation context.
 
-When using `JsonRule`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
+When using `NestedRuleApi`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
 
-#### JsonRPN example
+#### FlatRuleAPI example
 
 ```json
 {
@@ -155,7 +170,7 @@ When using `JsonRule`, specify actions under the `actions` key alongside the rul
 
 Evaluating the JSON above with `{ "a": 1, "b": 1, "count": 0 }` updates `count` to `1` when the rule evaluates to `true`.
 
-#### JsonRule example
+#### NestedRuleApi example
 
 ```php
 $ruleset = [
@@ -170,7 +185,7 @@ $ruleset = [
 
 $data = ['a' => 1, 'count' => 0];
 
-JsonRule::evaluate($ruleset, $data); // true
+NestedRuleApi::evaluate($ruleset, $data); // true
 ```
 
 

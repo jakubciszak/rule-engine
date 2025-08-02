@@ -5,7 +5,7 @@ namespace JakubCiszak\RuleEngine\Api;
 use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset, Action, ActivityRule, RuleInterface};
 use JakubCiszak\RuleEngine\Api\ActionParser;
 
-final class JsonRule
+final class NestedRuleApi
 {
     private static int $constCounter = 0;
     private const OPERATORS = ['and', 'or', '!', 'not', '==', '!=', '>', '<', '>=', '<=', 'in'];
@@ -14,24 +14,8 @@ final class JsonRule
     {
     }
 
-    /**
-     * Evaluate JSON logic rules using provided data.
-     *
-     * @param array|string $rules
-     * @param array|string $data
-     *
-     * @throws \JsonException
-     */
-    public static function evaluate(array|string $rules, array|string $data = []): bool
+    public static function evaluate(array $rules, array $data = []): bool
     {
-        if (is_string($rules)) {
-            $rules = json_decode($rules, true, 512, JSON_THROW_ON_ERROR);
-        }
-
-        if (is_string($data)) {
-            $data = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
-        }
-
         $context = self::createContext($data);
 
         if (is_array($rules) && self::isRulesetArray($rules)) {
@@ -136,7 +120,12 @@ final class JsonRule
 
     private static function addVariable(string $path, Rule $rule, array $data): void
     {
-        $rule->variable($path, self::extractVar($data, $path));
+        $value = self::extractVar($data, $path);
+        if (is_bool($value) || is_callable($value)) {
+            $rule->proposition($path, $value ?? true);
+        } else {
+            $rule->variable($path, $value);
+        }
     }
 
     private static function addConstant(mixed $value, Rule $rule): void
@@ -176,7 +165,6 @@ final class JsonRule
     }
 
     /**
-     * @param array $definition
      * @return string[]
      */
     private static function extractActions(array &$definition): array
@@ -192,7 +180,6 @@ final class JsonRule
     }
 
     /**
-     * @param Rule $rule
      * @param string[] $actions
      */
     private static function decorateWithActions(Rule $rule, array $actions): RuleInterface
@@ -215,7 +202,7 @@ final class JsonRule
     {
         $context = new RuleContext();
         foreach ($data as $name => $value) {
-            if (is_bool($value)) {
+            if (is_bool($value) || is_callable($value)) {
                 $context->proposition($name, $value);
             } else {
                 $context->variable($name, $value);

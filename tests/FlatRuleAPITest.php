@@ -2,14 +2,14 @@
 
 namespace JakubCiszak\RuleEngine\Tests;
 
-use JakubCiszak\RuleEngine\Api\JsonRPN;
+use JakubCiszak\RuleEngine\Api\FlatRuleAPI;
 use PHPUnit\Framework\TestCase;
 
-final class JsonRPNTest extends TestCase
+final class FlatRuleAPITest extends TestCase
 {
-    public function testEvaluateJsonRPNs(): void
+    public function testEvaluateFlatRuleAPIs(): void
     {
-        $rulesJson = json_encode([
+        $rules = [
             'rules' => [
                 [
                     'name' => 'rule1',
@@ -28,25 +28,25 @@ final class JsonRPNTest extends TestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $contextJson = json_encode([
+        $context = [
             'a' => 1,
             'b' => 1,
             'amount' => 50,
             'max' => 100,
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $resultJson = JsonRPN::evaluate($rulesJson, $contextJson);
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
         $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertTrue($result['results'][0]['value']);
         $this->assertFalse($result['results'][1]['value']);
     }
 
-    public function testEvaluateJsonRPNsWithActions(): void
+    public function testEvaluateFlatRuleAPIsWithActions(): void
     {
-        $rulesJson = json_encode([
+        $rules = [
             'rules' => [
                 [
                     'name' => 'rule1',
@@ -68,16 +68,16 @@ final class JsonRPNTest extends TestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $contextJson = json_encode([
+        $context = [
             'a' => 1,
             'b' => 1,
             'count' => 0,
             'expected' => 1,
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $resultJson = JsonRPN::evaluate($rulesJson, $contextJson);
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
         $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertTrue($result['results'][0]['value']);
@@ -86,7 +86,7 @@ final class JsonRPNTest extends TestCase
 
     public function testActionUsingVariableReference(): void
     {
-        $rulesJson = json_encode([
+        $rules = [
             'rules' => [
                 [
                     'name' => 'rule1',
@@ -108,17 +108,17 @@ final class JsonRPNTest extends TestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $contextJson = json_encode([
+        $context = [
             'x' => 1,
             'y' => 1,
             'count' => 1,
             'increment' => 2,
             'expected' => 3,
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $resultJson = JsonRPN::evaluate($rulesJson, $contextJson);
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
         $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertTrue($result['results'][0]['value']);
@@ -127,7 +127,7 @@ final class JsonRPNTest extends TestCase
 
     public function testActionSubtract(): void
     {
-        $rulesJson = json_encode([
+        $rules = [
             'rules' => [
                 [
                     'name' => 'rule1',
@@ -149,16 +149,16 @@ final class JsonRPNTest extends TestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $contextJson = json_encode([
+        $context = [
             'a' => 1,
             'b' => 1,
             'count' => 10,
             'expected' => 8,
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $resultJson = JsonRPN::evaluate($rulesJson, $contextJson);
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
         $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertTrue($result['results'][0]['value']);
@@ -167,7 +167,7 @@ final class JsonRPNTest extends TestCase
 
     public function testActionConcatenate(): void
     {
-        $rulesJson = json_encode([
+        $rules = [
             'rules' => [
                 [
                     'name' => 'rule1',
@@ -189,15 +189,15 @@ final class JsonRPNTest extends TestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $contextJson = json_encode([
+        $context = [
             'name' => 'John',
             'before' => 'John',
             'expected' => 'JohnDoe',
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $resultJson = JsonRPN::evaluate($rulesJson, $contextJson);
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
         $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertTrue($result['results'][0]['value']);
@@ -206,7 +206,7 @@ final class JsonRPNTest extends TestCase
 
     public function testActionSet(): void
     {
-        $rulesJson = json_encode([
+        $rules = [
             'rules' => [
                 [
                     'name' => 'rule1',
@@ -228,19 +228,40 @@ final class JsonRPNTest extends TestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $contextJson = json_encode([
+        $context = [
             'a' => 1,
             'b' => 1,
             'status' => 'pending',
             'expected' => 'done',
-        ], JSON_THROW_ON_ERROR);
+        ];
 
-        $resultJson = JsonRPN::evaluate($rulesJson, $contextJson);
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
         $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertTrue($result['results'][0]['value']);
         $this->assertTrue($result['results'][1]['value']);
+    }
+
+    public function testCallablePropositionInContext(): void
+    {
+        $rules = [
+            'rules' => [
+                [
+                    'name' => 'rule1',
+                    'elements' => [
+                        ['type' => 'proposition', 'name' => 'flag'],
+                    ],
+                ],
+            ],
+        ];
+
+        $context = ['flag' => fn () => true];
+
+        $resultJson = FlatRuleAPI::evaluate($rules, $context);
+        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $this->assertTrue($result['results'][0]['value']);
     }
 }

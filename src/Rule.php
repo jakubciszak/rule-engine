@@ -6,9 +6,7 @@ use Munus\Collection\GenericList;
 
 class Rule implements RuleInterface
 {
-    /**
-     * @param GenericList<RuleElement> $elements
-     */
+    /** @var GenericList<RuleElement> */
     private GenericList $elements;
 
     public function __construct(public readonly string $name)

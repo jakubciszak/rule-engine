@@ -14,7 +14,6 @@ final class ActivityRule implements RuleInterface
     public readonly string $name;
 
     /**
-     * @param RuleInterface $rule
      * @param T $activity
      */
     public function __construct(

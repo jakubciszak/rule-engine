@@ -2,10 +2,10 @@
 
 namespace JakubCiszak\RuleEngine\Tests;
 
-use JakubCiszak\RuleEngine\Api\JsonRule;
+use JakubCiszak\RuleEngine\Api\NestedRuleApi;
 use PHPUnit\Framework\TestCase;
 
-final class JsonRuleTest extends TestCase
+final class NestedRuleApiTest extends TestCase
 {
     public function testEvaluateArrayRules(): void
     {
@@ -16,7 +16,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
 
-        self::assertTrue(JsonRule::evaluate($rules, $data));
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
     }
 
     public function testEvaluateJsonStrings(): void
@@ -27,7 +27,12 @@ final class JsonRuleTest extends TestCase
         $rulesJson = json_encode($rules, JSON_THROW_ON_ERROR);
         $dataJson = json_encode($data, JSON_THROW_ON_ERROR);
 
-        self::assertFalse(JsonRule::evaluate($rulesJson, $dataJson));
+        self::assertFalse(
+            NestedRuleApi::evaluate(
+                json_decode($rulesJson, true, 512, JSON_THROW_ON_ERROR),
+                json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR)
+            )
+        );
     }
 
     public function testEvaluateOrOperator(): void
@@ -39,7 +44,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['a' => 0, 'b' => 3];
 
-        self::assertTrue(JsonRule::evaluate($rules, $data));
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
     }
 
     public function testEvaluateNotOperator(): void
@@ -50,7 +55,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['a' => 3];
 
-        self::assertTrue(JsonRule::evaluate($rules, $data));
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
     }
 
     public function testEvaluateAllComparisonOperators(): void
@@ -73,7 +78,7 @@ final class JsonRuleTest extends TestCase
             'f' => 2,
         ];
 
-        self::assertTrue(JsonRule::evaluate($rules, $data));
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
     }
 
     public function testEvaluateRulesetArray(): void
@@ -91,7 +96,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
 
-        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
     }
 
     public function testEvaluateRulesetJson(): void
@@ -105,7 +110,12 @@ final class JsonRuleTest extends TestCase
         $rulesetJson = json_encode($ruleset, JSON_THROW_ON_ERROR);
         $dataJson = json_encode($data, JSON_THROW_ON_ERROR);
 
-        self::assertTrue(JsonRule::evaluate($rulesetJson, $dataJson));
+        self::assertTrue(
+            NestedRuleApi::evaluate(
+                json_decode($rulesetJson, true, 512, JSON_THROW_ON_ERROR),
+                json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR)
+            )
+        );
     }
 
     public function testEvaluateRulesetWithActions(): void
@@ -122,7 +132,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['a' => 1, 'count' => 0];
 
-        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
     }
 
     public function testActionUsingVariableReference(): void
@@ -139,7 +149,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['x' => 1, 'count' => 1, 'increment' => 2];
 
-        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
     }
 
     public function testActionSubtract(): void
@@ -156,7 +166,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['a' => 1, 'count' => 10];
 
-        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
     }
 
     public function testActionConcatenate(): void
@@ -173,7 +183,7 @@ final class JsonRuleTest extends TestCase
 
         $data = ['name' => 'John'];
 
-        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
     }
 
     public function testActionSet(): void
@@ -190,6 +200,17 @@ final class JsonRuleTest extends TestCase
 
         $data = ['a' => 1, 'status' => 'pending'];
 
-        self::assertTrue(JsonRule::evaluate($ruleset, $data));
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+    }
+
+    public function testCallableProposition(): void
+    {
+        $rules = ['and' => [
+            ['var' => 'check'],
+        ]];
+
+        $data = ['check' => fn () => true];
+
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
     }
 }
