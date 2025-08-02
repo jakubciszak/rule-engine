@@ -14,7 +14,7 @@ final class NestedRuleApi
     {
     }
 
-    public static function evaluate(array $rules, array $data = []): bool
+    public static function evaluate(array $rules, array &$data = []): bool
     {
         $context = self::createContext($data);
 
@@ -33,8 +33,9 @@ final class NestedRuleApi
             );
 
             $ruleset = new Ruleset(...$ruleObjects);
-            $result = $ruleset->evaluate($context);
-            return $result->getValue();
+            $result = $ruleset->evaluate($context)->getValue();
+            $data = $context->toArray();
+            return $result;
         }
 
         if (is_array($rules)) {
@@ -48,8 +49,9 @@ final class NestedRuleApi
 
         $executor = $actions === [] ? $rule : self::decorateWithActions($rule, $actions);
 
-        $result = $executor->evaluate($context);
-        return $result->getValue();
+        $result = $executor->evaluate($context)->getValue();
+        $data = $context->toArray();
+        return $result;
     }
 
     private static function parseExpression(mixed $expr, Rule $rule, array $data): void

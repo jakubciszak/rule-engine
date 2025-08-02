@@ -27,10 +27,13 @@ final class NestedRuleApiTest extends TestCase
         $rulesJson = json_encode($rules, JSON_THROW_ON_ERROR);
         $dataJson = json_encode($data, JSON_THROW_ON_ERROR);
 
+        $decodedRules = json_decode($rulesJson, true, 512, JSON_THROW_ON_ERROR);
+        $decodedData = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
         self::assertFalse(
             NestedRuleApi::evaluate(
-                json_decode($rulesJson, true, 512, JSON_THROW_ON_ERROR),
-                json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR)
+                $decodedRules,
+                $decodedData
             )
         );
     }
@@ -110,10 +113,13 @@ final class NestedRuleApiTest extends TestCase
         $rulesetJson = json_encode($ruleset, JSON_THROW_ON_ERROR);
         $dataJson = json_encode($data, JSON_THROW_ON_ERROR);
 
+        $decodedRuleset = json_decode($rulesetJson, true, 512, JSON_THROW_ON_ERROR);
+        $decodedData = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
         self::assertTrue(
             NestedRuleApi::evaluate(
-                json_decode($rulesetJson, true, 512, JSON_THROW_ON_ERROR),
-                json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR)
+                $decodedRuleset,
+                $decodedData
             )
         );
     }
@@ -133,6 +139,7 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1, 'count' => 0];
 
         self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+        self::assertSame(1, $data['count']);
     }
 
     public function testActionUsingVariableReference(): void
@@ -150,6 +157,7 @@ final class NestedRuleApiTest extends TestCase
         $data = ['x' => 1, 'count' => 1, 'increment' => 2];
 
         self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+        self::assertSame(3, $data['count']);
     }
 
     public function testActionSubtract(): void
@@ -167,6 +175,7 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1, 'count' => 10];
 
         self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+        self::assertSame(8, $data['count']);
     }
 
     public function testActionConcatenate(): void
@@ -184,6 +193,7 @@ final class NestedRuleApiTest extends TestCase
         $data = ['name' => 'John'];
 
         self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+        self::assertSame('JohnDoe', $data['name']);
     }
 
     public function testActionSet(): void
@@ -201,6 +211,7 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1, 'status' => 'pending'];
 
         self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+        self::assertSame('done', $data['status']);
     }
 
     public function testCallableProposition(): void

@@ -46,4 +46,21 @@ class RuleContext
     {
         return $this->elements->get($ruleElement->getName())->getOrElse(null);
     }
+
+    public function toArray(): array
+    {
+        $result = [];
+        $iterator = $this->elements->getIterator();
+        while ($iterator->hasNext()) {
+            /** @var \Munus\Tuple\Tuple2 $tuple */
+            $tuple = $iterator->next();
+            $name = $tuple[0];
+            $element = $tuple[1];
+            if (method_exists($element, 'getValue')) {
+                $result[$name] = $element->getValue();
+            }
+        }
+
+        return $result;
+    }
 }

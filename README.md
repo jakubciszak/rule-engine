@@ -95,15 +95,14 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
 }
 ```
 
-This JSON can be decoded and passed to the `FlatRuleAPI` context to get the evaluation result in the same structure.
+This JSON can be decoded and passed to the `FlatRuleAPI` context to get the evaluation result as a boolean. The context array is
+passed by reference and updated with any values changed during evaluation.
 
 ```php
-$rulesJson = '{"rules": [...]}';
-$contextJson = '{"a":1,"b":2}';
-$resultJson = FlatRuleAPI::evaluate(
-    json_decode($rulesJson, true, 512, JSON_THROW_ON_ERROR),
-    json_decode($contextJson, true, 512, JSON_THROW_ON_ERROR)
-);
+$rules = json_decode('{"rules": [...]}', true, 512, JSON_THROW_ON_ERROR);
+$context = json_decode('{"a":1,"b":2}', true, 512, JSON_THROW_ON_ERROR);
+$result = FlatRuleAPI::evaluate($rules, $context);
+// $context now contains any modifications made by rule actions
 ```
 
 
@@ -223,6 +222,13 @@ When using `NestedRuleApi`, specify actions under the `actions` key alongside th
 
 Evaluating the JSON above with `{ "a": 1, "b": 1, "count": 0 }` updates `count` to `1` when the rule evaluates to `true`.
 
+```php
+$rules = json_decode($json, true, 512, JSON_THROW_ON_ERROR); // $json contains JSON above
+$context = ['a' => 1, 'b' => 1, 'count' => 0];
+FlatRuleAPI::evaluate($rules, $context);
+// $context['count'] === 1
+```
+
 #### NestedRuleApi example
 
 ```php
@@ -239,6 +245,7 @@ $ruleset = [
 $data = ['a' => 1, 'count' => 0];
 
 NestedRuleApi::evaluate($ruleset, $data); // true
+// $data['count'] === 1
 ```
 
 
