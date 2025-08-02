@@ -88,7 +88,7 @@ final class NestedRuleApi
                 self::parseExpression($value, $rule, $data);
 
                 if ($index > 0) {
-                    $rule->addElement(Operator::create(strtoupper($operator)));
+                    $rule->addElement(Operator::create($operator));
                 }
             },
             $values,
@@ -107,17 +107,7 @@ final class NestedRuleApi
         self::parseExpression($values[1] ?? null, $rule, $data);
         self::parseExpression($values[0] ?? null, $rule, $data);
 
-        $op = match ($operator) {
-            '==' => Operator::EQUAL_TO,
-            '!=' => Operator::NOT_EQUAL_TO,
-            '>' => Operator::GREATER_THAN,
-            '<' => Operator::LESS_THAN,
-            '>=' => Operator::GREATER_THAN_OR_EQUAL_TO,
-            '<=' => Operator::LESS_THAN_OR_EQUAL_TO,
-            'in' => Operator::IN,
-        };
-
-        $rule->addElement($op);
+        $rule->addElement(Operator::create($operator));
     }
 
     private static function addVariable(string $path, Rule $rule, array $data): void

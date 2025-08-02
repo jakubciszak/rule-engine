@@ -163,18 +163,7 @@ final class StringRuleApi
 
     private static function mapOperator(string $op): Operator
     {
-        return match ($op) {
-            'and' => Operator::AND,
-            'or' => Operator::OR,
-            'not', '!' => Operator::NOT,
-            '>' => Operator::GREATER_THAN,
-            '<' => Operator::LESS_THAN,
-            '>=' => Operator::GREATER_THAN_OR_EQUAL_TO,
-            '<=' => Operator::LESS_THAN_OR_EQUAL_TO,
-            'is', '==' => Operator::EQUAL_TO,
-            '!=' => Operator::NOT_EQUAL_TO,
-            default => throw new InvalidArgumentException('Unsupported operator'),
-        };
+        return Operator::create($op);
     }
 
     private static function parseValue(string $value): mixed

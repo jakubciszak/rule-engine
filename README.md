@@ -80,7 +80,7 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
       "elements": [
         {"type": "variable", "name": "a"},
         {"type": "variable", "name": "b"},
-        {"type": "operator", "name": "EQUAL_TO"}
+        {"type": "operator", "name": "=="}
       ]
     },
     {
@@ -88,7 +88,7 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
       "elements": [
         {"type": "variable", "name": "amount"},
         {"type": "variable", "name": "max"},
-        {"type": "operator", "name": "GREATER_THAN"}
+        {"type": "operator", "name": ">"}
       ]
     }
   ]
@@ -212,7 +212,7 @@ When using `NestedRuleApi`, specify actions under the `actions` key alongside th
       "elements": [
         {"type": "variable", "name": "a"},
         {"type": "variable", "name": "b"},
-        {"type": "operator", "name": "EQUAL_TO"}
+        {"type": "operator", "name": "=="}
       ],
        "actions": [".count + 1"]
     }
