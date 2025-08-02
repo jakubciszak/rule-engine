@@ -3,7 +3,7 @@
 namespace JakubCiszak\RuleEngine\Api;
 
 use InvalidArgumentException;
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition, Action, ActivityRule, RuleInterface};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition, Action, ActivityRule, RuleInterface, Ruleset};
 use JakubCiszak\RuleEngine\Api\ActionParser;
 
 final class FlatRuleAPI
@@ -12,7 +12,7 @@ final class FlatRuleAPI
     {
     }
 
-    public static function evaluate(array $rulesetData, array $contextData = []): string
+    public static function evaluate(array $rulesetData, array &$contextData = []): bool
     {
 
         if (!isset($rulesetData['rules']) || !is_array($rulesetData['rules'])) {
@@ -20,15 +20,17 @@ final class FlatRuleAPI
         }
 
         $context = self::createContext($contextData);
-        $results = [];
 
-        foreach ($rulesetData['rules'] as $ruleData) {
-            $rule = self::createRule($ruleData);
-            $result = $rule->evaluate($context);
-            $results[] = ['name' => $rule->name, 'value' => $result->getValue()];
-        }
+        $rules = array_map(
+            static fn(array $ruleData): RuleInterface => self::createRule($ruleData),
+            $rulesetData['rules']
+        );
 
-        return json_encode(['results' => $results], JSON_THROW_ON_ERROR);
+        $ruleset = new Ruleset(...$rules);
+
+        $result = $ruleset->evaluate($context)->getValue();
+        $contextData = $context->toArray();
+        return $result;
     }
 
     private static function createRule(array $data): RuleInterface

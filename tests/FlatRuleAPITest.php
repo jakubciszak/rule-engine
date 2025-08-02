@@ -37,11 +37,9 @@ final class FlatRuleAPITest extends TestCase
             'max' => 100,
         ];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
-        $this->assertFalse($result['results'][1]['value']);
+        $this->assertFalse($result);
     }
 
     public function testEvaluateFlatRuleAPIsWithActions(): void
@@ -77,11 +75,10 @@ final class FlatRuleAPITest extends TestCase
             'expected' => 1,
         ];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
-        $this->assertTrue($result['results'][1]['value']);
+        $this->assertTrue($result);
+        $this->assertSame(1, $context['count']);
     }
 
     public function testActionUsingVariableReference(): void
@@ -118,11 +115,10 @@ final class FlatRuleAPITest extends TestCase
             'expected' => 3,
         ];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
-        $this->assertTrue($result['results'][1]['value']);
+        $this->assertTrue($result);
+        $this->assertSame(3, $context['count']);
     }
 
     public function testActionSubtract(): void
@@ -158,11 +154,10 @@ final class FlatRuleAPITest extends TestCase
             'expected' => 8,
         ];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
-        $this->assertTrue($result['results'][1]['value']);
+        $this->assertTrue($result);
+        $this->assertSame(8, $context['count']);
     }
 
     public function testActionConcatenate(): void
@@ -197,11 +192,10 @@ final class FlatRuleAPITest extends TestCase
             'expected' => 'JohnDoe',
         ];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
-        $this->assertTrue($result['results'][1]['value']);
+        $this->assertTrue($result);
+        $this->assertSame('JohnDoe', $context['name']);
     }
 
     public function testActionSet(): void
@@ -237,11 +231,10 @@ final class FlatRuleAPITest extends TestCase
             'expected' => 'done',
         ];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
-        $this->assertTrue($result['results'][1]['value']);
+        $this->assertTrue($result);
+        $this->assertSame('done', $context['status']);
     }
 
     public function testCallablePropositionInContext(): void
@@ -259,9 +252,8 @@ final class FlatRuleAPITest extends TestCase
 
         $context = ['flag' => fn () => true];
 
-        $resultJson = FlatRuleAPI::evaluate($rules, $context);
-        $result = json_decode($resultJson, true, 512, JSON_THROW_ON_ERROR);
+        $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result['results'][0]['value']);
+        $this->assertTrue($result);
     }
 }
