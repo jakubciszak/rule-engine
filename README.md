@@ -6,6 +6,7 @@ Pick the API that matches the shape of your data:
 
 - **FlatRuleAPI** – send a linear array in [Reverse Polish Notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) for fast stack-based evaluation.
 - **NestedRuleApi** – describe rules as nested associative arrays that read like infix notation.
+- **StringRuleApi** – parse and evaluate human readable infix expressions.
 
 Both APIs accept arrays decoded from JSON and can work with callables inside the evaluation context, giving you a flexible way to run rules or trigger simple actions.
 
@@ -134,6 +135,58 @@ $ruleset = [
 $data = ['a' => 1, 'b' => 3];
 
 NestedRuleApi::evaluate($ruleset, $data); // true
+```
+
+### StringRuleApi usage
+
+`StringRuleApi` accepts conditions written as human readable infix expressions. Variables are denoted by a leading dot and resolved from the supplied data array.
+
+```php
+use JakubCiszak\RuleEngine\Api\StringRuleApi;
+
+$expr = '(.actualAge > 18 or .name is Adam) or (.citizenship is PL and .actualAge > 15)';
+$data = ['actualAge' => 16, 'name' => 'John', 'citizenship' => 'PL'];
+
+$result = StringRuleApi::evaluate($expr, $data); // true
+```
+
+Complex nested conditions are also supported:
+
+```php
+$complex = '((.a > 1 and (.b < 3 or .c is 2)) or ((.d >= 5 and .e <= 10) and not (.f != 7))) and (.g is true or .h is false)';
+$data = [
+    'a' => 2,
+    'b' => 2,
+    'c' => 2,
+    'd' => 5,
+    'e' => 10,
+    'f' => 7,
+    'g' => true,
+    'h' => true,
+];
+
+$result = StringRuleApi::evaluate($complex, $data); // true
+```
+
+`StringRuleApi` can evaluate a set of named expressions as a ruleset, returning a single boolean result:
+
+```php
+$rules = [
+    'adult' => '.actualAge > 18',
+    'plCitizen' => '.citizenship is PL',
+];
+$data = ['actualAge' => 16, 'citizenship' => 'PL'];
+
+$result = StringRuleApi::evaluate($rules, $data); // false
+```
+
+Boolean variables can be referenced directly without explicit comparison and negated using `not`:
+
+```php
+$flags = '.g and not .h';
+$data = ['g' => true, 'h' => false];
+
+StringRuleApi::evaluate($flags, $data); // true
 ```
 
 ### Rule actions
