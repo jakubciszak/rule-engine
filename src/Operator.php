@@ -2,6 +2,8 @@
 
 namespace JakubCiszak\RuleEngine;
 
+use InvalidArgumentException;
+
 enum Operator implements RuleElement
 {
     case AND;
@@ -25,19 +27,20 @@ enum Operator implements RuleElement
         return RuleElementType::OPERATOR;
     }
 
-    public static function create(string $name): static
+    public static function create(string $symbol): static
     {
-        return match ($name) {
-            'AND' => self::AND,
-            'OR' => self::OR,
-            'NOT' => self::NOT,
-            'EQUAL_TO' => self::EQUAL_TO,
-            'NOT_EQUAL_TO' => self::NOT_EQUAL_TO,
-            'GREATER_THAN' => self::GREATER_THAN,
-            'LESS_THAN' => self::LESS_THAN,
-            'GREATER_THAN_OR_EQUAL_TO' => self::GREATER_THAN_OR_EQUAL_TO,
-            'LESS_THAN_OR_EQUAL_TO' => self::LESS_THAN_OR_EQUAL_TO,
-            'IN' => self::IN,
+        return match (strtolower($symbol)) {
+            'and' => self::AND,
+            'or' => self::OR,
+            'not', '!' => self::NOT,
+            '==', 'is', 'equal_to' => self::EQUAL_TO,
+            '!=', 'not_equal_to' => self::NOT_EQUAL_TO,
+            '>' , 'greater_than' => self::GREATER_THAN,
+            '<', 'less_than' => self::LESS_THAN,
+            '>=' , 'greater_than_or_equal_to' => self::GREATER_THAN_OR_EQUAL_TO,
+            '<=', 'less_than_or_equal_to' => self::LESS_THAN_OR_EQUAL_TO,
+            'in' => self::IN,
+            default => throw new InvalidArgumentException('Unsupported operator'),
         };
     }
 

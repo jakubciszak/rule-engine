@@ -224,4 +224,22 @@ final class NestedRuleApiTest extends TestCase
 
         self::assertTrue(NestedRuleApi::evaluate($rules, $data));
     }
+
+    public function testActionInitializesMissingVariable(): void
+    {
+        $ruleset = [
+            'rule1' => [
+                '==' => [['var' => 'a'], 1],
+                'actions' => ['.generated + 1'],
+            ],
+            'rule2' => [
+                '==' => [['var' => 'generated'], 1],
+            ],
+        ];
+
+        $data = ['a' => 1];
+
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
+        self::assertSame(1, $data['generated']);
+    }
 }

@@ -16,7 +16,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'a'],
                         ['type' => 'variable', 'name' => 'b'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                 ],
                 [
@@ -24,7 +24,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'max'],
                         ['type' => 'variable', 'name' => 'amount'],
-                        ['type' => 'operator', 'name' => 'GREATER_THAN'],
+                        ['type' => 'operator', 'name' => '>'],
                     ],
                 ],
             ],
@@ -51,7 +51,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'a'],
                         ['type' => 'variable', 'name' => 'b'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                     'actions' => [
                         '.count + 1',
@@ -62,7 +62,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'count'],
                         ['type' => 'variable', 'name' => 'expected'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                 ],
             ],
@@ -90,7 +90,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'x'],
                         ['type' => 'variable', 'name' => 'y'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                     'actions' => [
                         '.count + .increment',
@@ -101,7 +101,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'count'],
                         ['type' => 'variable', 'name' => 'expected'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                 ],
             ],
@@ -130,7 +130,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'a'],
                         ['type' => 'variable', 'name' => 'b'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                     'actions' => [
                         '.count - 2',
@@ -141,7 +141,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'count'],
                         ['type' => 'variable', 'name' => 'expected'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                 ],
             ],
@@ -169,7 +169,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'name'],
                         ['type' => 'variable', 'name' => 'before'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                     'actions' => [
                         '.name . Doe',
@@ -180,7 +180,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'name'],
                         ['type' => 'variable', 'name' => 'expected'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                 ],
             ],
@@ -207,7 +207,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'a'],
                         ['type' => 'variable', 'name' => 'b'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                     'actions' => [
                         '.status = done',
@@ -218,7 +218,7 @@ final class FlatRuleAPITest extends TestCase
                     'elements' => [
                         ['type' => 'variable', 'name' => 'status'],
                         ['type' => 'variable', 'name' => 'expected'],
-                        ['type' => 'operator', 'name' => 'EQUAL_TO'],
+                        ['type' => 'operator', 'name' => '=='],
                     ],
                 ],
             ],
@@ -255,5 +255,40 @@ final class FlatRuleAPITest extends TestCase
         $result = FlatRuleAPI::evaluate($rules, $context);
 
         $this->assertTrue($result);
+    }
+
+    public function testActionInitializesMissingVariable(): void
+    {
+        $rules = [
+            'rules' => [
+                [
+                    'name' => 'rule1',
+                    'elements' => [
+                        ['type' => 'variable', 'name' => 'a'],
+                        ['type' => 'variable', 'name' => 'b'],
+                        ['type' => 'operator', 'name' => '=='],
+                    ],
+                    'actions' => ['.generated + 1'],
+                ],
+                [
+                    'name' => 'rule2',
+                    'elements' => [
+                        ['type' => 'variable', 'name' => 'generated'],
+                        ['type' => 'variable', 'name' => 'expected', 'value' => 1],
+                        ['type' => 'operator', 'name' => '=='],
+                    ],
+                ],
+            ],
+        ];
+
+        $context = [
+            'a' => 1,
+            'b' => 1,
+        ];
+
+        $result = FlatRuleAPI::evaluate($rules, $context);
+
+        $this->assertTrue($result);
+        $this->assertSame(1, $context['generated']);
     }
 }
