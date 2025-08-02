@@ -29,46 +29,8 @@ composer require jakubciszak/rule-engine
 
 ## Usage
 
-### Notation
-This implementation use [Reverse Polish Notation (RPN)](https://en.wikipedia.org/wiki/Reverse_Polish_notation). \
-**RPN** is a mathematical notation in which operators follow their operands. This notation eliminates the need for parentheses that are used in standard infix notation, making the evaluation of expressions simpler and more efficient.
 
-For example, the expression \
-`(2 + 3) * 5` \
-in standard notation would be written as \
-`2 3 + 5 *` in RPN.
-
-In this notation, you first add 2 and 3 to get 5, and then multiply by 5 to get 25.
-
-The Rule Engine uses RPN to simplify the process of building conditions, making it more intuitive to construct complex logical expressions.
-
-### Creating Rules
-
-You can create rules using the provided methods for different operators:
-
-```php
-use JakubCiszak\RuleEngine\Rule;
-use JakubCiszak\RuleEngine\Operator;
-
-$rule = (new Rule())
-    ->variable('expectedAge', 22)
-    ->variable('age')
-    ->greaterThan()
-    ->evaluate($context);
-```
-
-### Evaluating Rules
-
-To evaluate a rule, you need to provide a `RuleContext`:
-
-```php
-use JakubCiszak\RuleEngine\RuleContext;
-
-$context = new RuleContext();
-$result = $rule->evaluate($context);
-```
-
-### FlatRuleAPI context
+### FlatRuleAPI
 
 Rules can also be defined using JSON in RPN order. The example below presents two rules:
 
@@ -106,7 +68,7 @@ $result = FlatRuleAPI::evaluate($rules, $context);
 ```
 
 
-### NestedRuleApi format
+### NestedRuleApi
 
 `NestedRuleApi` accepts rules defined using a JSON structure that resembles infix notation. Operators are written as keys and their arguments are provided in nested arrays.
 
@@ -248,6 +210,50 @@ NestedRuleApi::evaluate($ruleset, $data); // true
 // $data['count'] === 1
 ```
 
+## What is behind?
+
+### Pure PHP library usage gives most flexible and powerful solutions
+
+### Notation
+This implementation use [Reverse Polish Notation (RPN)](https://en.wikipedia.org/wiki/Reverse_Polish_notation). \
+**RPN** is a mathematical notation in which operators follow their operands. This notation eliminates the need for parentheses that are used in standard infix notation, making the evaluation of expressions simpler and more efficient.
+
+For example, the expression \
+`(2 + 3) * 5` \
+in standard notation would be written as \
+`2 3 + 5 *` in RPN.
+
+In this notation, you first add 2 and 3 to get 5, and then multiply by 5 to get 25.
+
+The Rule Engine uses RPN to simplify the process of building conditions, making it more intuitive to construct complex logical expressions.
+
+### Creating Rules
+
+You can create rules using the provided methods for different operators:
+
+```php
+use JakubCiszak\RuleEngine\Rule;
+use JakubCiszak\RuleEngine\Operator;
+
+$rule = (new Rule())
+    ->variable('expectedAge', 22)
+    ->variable('age')
+    ->greaterThan()
+    ->evaluate($context);
+```
+
+### Evaluating Rules
+
+To evaluate a rule, you need to provide a `RuleContext`:
+
+```php
+use JakubCiszak\RuleEngine\RuleContext;
+
+$context = new RuleContext();
+$result = $rule->evaluate($context);
+```
+
+---
 
 ## Development
 
