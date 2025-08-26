@@ -5,6 +5,8 @@ namespace JakubCiszak\RuleEngine;
 
 interface ValueElement
 {
+    public function getName(): string;
+    
     public function getValue(): mixed;
     
     public function equalTo(ValueElement $element): Proposition;

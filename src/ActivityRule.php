@@ -4,24 +4,23 @@ namespace JakubCiszak\RuleEngine;
 
 use Closure;
 
-/**
- * @template T of callable(RuleContext): mixed
- */
 final class ActivityRule implements RuleInterface
 {
-    /** @var T */
     private readonly Closure $activity;
     public readonly string $name;
 
-    /**
-     * @param T $activity
-     */
     public function __construct(
         private readonly RuleInterface $rule,
         callable $activity
     ) {
         $this->activity = Closure::fromCallable($activity);
-        $this->name = property_exists($rule, 'name') ? $rule->name : '';
+        $ruleName = '';
+        if ($rule instanceof Rule) {
+            $ruleName = $rule->name;
+        } elseif (property_exists($rule, 'name') && is_string($rule->name)) {
+            $ruleName = $rule->name;
+        }
+        $this->name = $ruleName;
     }
 
     public function and(): self
