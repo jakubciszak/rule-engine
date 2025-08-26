@@ -12,6 +12,11 @@ final class FlatRuleAPI
     {
     }
 
+    /**
+     * @param array<string, mixed> $rulesetData
+     * @param array<string, mixed> $contextData
+     * @param-out array<string, mixed> $contextData
+     */
     public static function evaluate(array $rulesetData, array &$contextData = []): bool
     {
 
@@ -19,11 +24,19 @@ final class FlatRuleAPI
             throw new InvalidArgumentException('Invalid rules data');
         }
 
+        $rulesData = $rulesetData['rules'];
+        foreach ($rulesData as $ruleData) {
+            if (!is_array($ruleData)) {
+                throw new InvalidArgumentException('Each rule must be an array');
+            }
+        }
+
         $context = self::createContext($contextData);
 
         $rules = array_map(
+            /** @param array<string, mixed> $ruleData */
             static fn(array $ruleData): RuleInterface => self::createRule($ruleData),
-            $rulesetData['rules']
+            $rulesData
         );
 
         $ruleset = new Ruleset(...$rules);
@@ -33,22 +46,49 @@ final class FlatRuleAPI
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function createRule(array $data): RuleInterface
     {
-        $rule = new Rule($data['name'] ?? uniqid('rule_', true));
-        foreach ($data['elements'] ?? [] as $element) {
+        $name = $data['name'] ?? uniqid('rule_', true);
+        if (!is_string($name)) {
+            throw new InvalidArgumentException('Rule name must be a string');
+        }
+        
+        $rule = new Rule($name);
+        $elements = $data['elements'] ?? [];
+        
+        if (!is_array($elements)) {
+            throw new InvalidArgumentException('Rule elements must be an array');
+        }
+        
+        foreach ($elements as $element) {
+            if (!is_array($element)) {
+                throw new InvalidArgumentException('Rule element must be an array');
+            }
+            
             $type = $element['type'] ?? null;
-            $name = $element['name'] ?? null;
+            $elementName = $element['name'] ?? null;
+            
+            if (!is_string($type) || !is_string($elementName)) {
+                throw new InvalidArgumentException('Element type and name must be strings');
+            }
+            
             if ($type === 'operator') {
-                $rule->addElement(Operator::create($name));
+                $rule->addElement(Operator::create($elementName));
                 continue;
             }
             if ($type === 'variable') {
-                $rule->addElement(Variable::create($name, $element['value'] ?? null));
+                $rule->addElement(Variable::create($elementName, $element['value'] ?? null));
                 continue;
             }
             if ($type === 'proposition') {
-                $rule->addElement(Proposition::create($name, $element['value'] ?? true));
+                $value = $element['value'] ?? true;
+                if (!is_bool($value) && !$value instanceof \Closure) {
+                    throw new InvalidArgumentException('Proposition value must be bool or Closure');
+                }
+                $rule->addElement(Proposition::create($elementName, $value));
                 continue;
             }
             throw new InvalidArgumentException('Invalid rule element');
@@ -56,9 +96,17 @@ final class FlatRuleAPI
         $resultRule = $rule;
 
         if (!empty($data['actions']) && is_array($data['actions'])) {
+            $actionExpressions = $data['actions'];
+            foreach ($actionExpressions as $expr) {
+                if (!is_string($expr)) {
+                    throw new InvalidArgumentException('Action expressions must be strings');
+                }
+            }
+            
             $actions = array_map(
+                /** @param string $expr */
                 static fn(string $expr): Action => ActionParser::parse($expr),
-                $data['actions']
+                $actionExpressions
             );
 
             $activity = static function (RuleContext $context) use ($actions): void {
@@ -73,6 +121,9 @@ final class FlatRuleAPI
         return $resultRule;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function createContext(array $data): RuleContext
     {
         $context = new RuleContext();

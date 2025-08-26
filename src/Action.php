@@ -25,9 +25,9 @@ final class Action
         $value = $this->resolveValue($context);
 
         $newValue = match ($this->type) {
-            ActionType::ADD => ($current ?? 0) + $value,
-            ActionType::SUBTRACT => ($current ?? 0) - $value,
-            ActionType::CONCAT => (string)($current ?? '') . (string)$value,
+            ActionType::ADD => $this->performAddition($current, $value),
+            ActionType::SUBTRACT => $this->performSubtraction($current, $value),
+            ActionType::CONCAT => $this->performConcatenation($current, $value),
             ActionType::SET => $value,
         };
 
@@ -42,5 +42,29 @@ final class Action
         }
 
         return $this->value;
+    }
+
+    private function performAddition(mixed $current, mixed $value): float|int
+    {
+        $currentNum = is_numeric($current) ? (float)$current : 0;
+        $valueNum = is_numeric($value) ? (float)$value : 0;
+        
+        return $currentNum + $valueNum;
+    }
+
+    private function performSubtraction(mixed $current, mixed $value): float|int
+    {
+        $currentNum = is_numeric($current) ? (float)$current : 0;
+        $valueNum = is_numeric($value) ? (float)$value : 0;
+        
+        return $currentNum - $valueNum;
+    }
+
+    private function performConcatenation(mixed $current, mixed $value): string
+    {
+        $currentStr = $current !== null ? (is_scalar($current) ? (string)$current : '') : '';
+        $valueStr = $value !== null ? (is_scalar($value) ? (string)$value : '') : '';
+        
+        return $currentStr . $valueStr;
     }
 }

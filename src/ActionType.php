@@ -16,6 +16,7 @@ enum ActionType
             'SUBTRACT' => self::SUBTRACT,
             'CONCAT' => self::CONCAT,
             'SET' => self::SET,
+            default => throw new \InvalidArgumentException("Unknown action type: $name"),
         };
     }
 }
