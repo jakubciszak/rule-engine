@@ -24,5 +24,8 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --no-suggest --prefer-dist
 
+      - name: Run PHPStan analysis
+        run: php phpstan.phar analyze --configuration=phpstan.neon
+
       - name: Run tests
         run: vendor/bin/phpunit

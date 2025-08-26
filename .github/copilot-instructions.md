@@ -49,24 +49,28 @@ php Examples/validate_examples.php
 Always run this sequence before making changes:
 ```bash
 composer install --ignore-platform-reqs --no-interaction
+php phpstan.phar analyze --configuration=phpstan.neon
 vendor/bin/phpunit
 php Examples/validate_examples.php
 ```
-**TOTAL TIME:** Under 25 seconds. NEVER CANCEL any of these commands.
+**TOTAL TIME:** Under 35 seconds. NEVER CANCEL any of these commands.
 
 ### Development Commands
 - **Run specific test:** `vendor/bin/phpunit tests/SpecificTest.php`
 - **Run with coverage:** `vendor/bin/phpunit --coverage-text`
+- **Run PHPStan analysis:** `php phpstan.phar analyze --configuration=phpstan.neon`
+- **Run PHPStan on specific file:** `php phpstan.phar analyze src/SomeFile.php`
 - **Syntax check:** `php -l src/SomeFile.php`
 - **Check autoloader:** `composer dump-autoload`
 
-### Static Analysis (Not Currently Configured)
-PHPStan is mentioned in existing instructions but not currently installed. To add it:
+### Static Analysis
+PHPStan is configured at maximum level (level: max) and integrated into the CI pipeline:
 ```bash
-composer require --dev phpstan/phpstan
-vendor/bin/phpstan analyze src
+php phpstan.phar analyze --configuration=phpstan.neon
 ```
-**WARNING:** Not part of current CI pipeline - only add if explicitly requested.
+**TIMING:** Completes in ~10 seconds
+**PURPOSE:** Ensures strict type safety and catches potential bugs before runtime
+**CONFIGURATION:** phpstan.neon with level max analyzing src/ directory
 
 ## Validation Scenarios
 
@@ -80,7 +84,12 @@ vendor/bin/phpunit tests/NestedRuleApiTest.php
 vendor/bin/phpunit tests/StringRuleApiTest.php
 ```
 
-2. **Example structure validation:**
+2. **Static analysis validation:**
+```bash
+php phpstan.phar analyze --configuration=phpstan.neon
+```
+
+3. **Example structure validation:**
 ```bash
 php Examples/validate_examples.php
 ```
@@ -130,12 +139,18 @@ declare(strict_types=1);
 - Prefer `final` classes and immutability in domain objects
 - Keep constructors small
 - No global state or singletons
+- **Follow PHPStan level max requirements:**
+  - Add proper type annotations for arrays: `@param array<string, mixed> $data`
+  - Handle mixed types safely with type checking before operations
+  - Use proper return type annotations with generics where needed
+  - Ensure all public API methods have complete type information
 
 ### Testing Requirements
 - Every behavioral change must include tests
 - Use descriptive test names: `test_it_evaluates_true_when_condition_met`
 - Cover edge cases: nulls, wrong types, boundary values
 - Prefer unit tests over integration tests
+- **Run PHPStan analysis before committing:** All new code must pass PHPStan level max
 
 ## Common Tasks
 
@@ -144,19 +159,22 @@ declare(strict_types=1);
 2. Add corresponding test in `tests/`
 3. Update API classes if needed
 4. Run full test suite
-5. **Expected time:** 30-60 minutes including tests
+5. **Run PHPStan analysis to ensure type safety**
+6. **Expected time:** 30-60 minutes including tests
 
 ### Fix Rule Evaluation Logic
 1. Identify failing test or create new test
 2. Modify core logic in `src/Rule.php` or related classes
 3. Ensure all existing tests still pass
-4. **Expected time:** 15-30 minutes
+4. **Run PHPStan analysis to catch type issues**
+5. **Expected time:** 15-30 minutes
 
 ### Add New API Method
 1. Extend appropriate API class in `src/Api/`
 2. Create comprehensive test coverage
-3. Update README.md if public API
-4. **Expected time:** 45-90 minutes
+3. **Add proper type annotations for PHPStan**
+4. Update README.md if public API
+5. **Expected time:** 45-90 minutes
 
 ## Troubleshooting
 
@@ -181,9 +199,10 @@ GitHub Actions runs:
 ```yaml
 - PHP 8.4 setup
 - composer install
+- php phpstan.phar analyze --configuration=phpstan.neon
 - vendor/bin/phpunit
 ```
-**Timing:** Entire CI takes ~2-3 minutes
+**Timing:** Entire CI takes ~3-4 minutes including PHPStan analysis
 **NEVER CANCEL:** All CI commands have appropriate timeouts
 
 ## Ready-Made Commands Reference
@@ -193,8 +212,13 @@ GitHub Actions runs:
 composer install --ignore-platform-reqs --no-interaction
 
 # Development workflow (run before/after changes)
+php phpstan.phar analyze --configuration=phpstan.neon
 vendor/bin/phpunit
 php Examples/validate_examples.php
+
+# Static analysis
+php phpstan.phar analyze --configuration=phpstan.neon
+php phpstan.phar analyze src/SomeFile.php
 
 # Test specific components
 vendor/bin/phpunit tests/FlatRuleAPITest.php
@@ -213,9 +237,10 @@ ls src/Api/
 ## Critical Timing and Timeout Guidelines
 
 - **composer install:** 18-20 seconds, timeout: 60 seconds
+- **php phpstan.phar analyze:** 8-12 seconds, timeout: 30 seconds
 - **vendor/bin/phpunit:** 0.04 seconds, timeout: 30 seconds
 - **Example validation:** 0.04 seconds, timeout: 30 seconds
-- **CI pipeline:** 2-3 minutes total
+- **CI pipeline:** 3-4 minutes total
 
 **NEVER CANCEL** any build or test command. If commands appear to hang, wait at least 60 seconds before considering alternatives.
 
