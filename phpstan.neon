@@ -2,3 +2,6 @@ parameters:
     level: max
     paths:
         - src
+    ignoreErrors:
+        - '#Method .+Variable::create\(\) should return static.+ but returns .+Variable#'
+        - '#PHPDoc tag @return with type .+ is not subtype of native type static#'
