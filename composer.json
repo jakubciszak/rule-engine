@@ -3,7 +3,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "munusphp/munus": "^0.16.0"
     },
     "require-dev": {

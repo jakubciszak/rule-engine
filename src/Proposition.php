@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace JakubCiszak\RuleEngine;
 
 use Closure;
 
-class Proposition implements RuleElement
+class Proposition implements RuleElement, ValueElement
 {
     use ValueAvailable;
 

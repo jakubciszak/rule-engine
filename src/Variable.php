@@ -1,8 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace JakubCiszak\RuleEngine;
 
-class Variable implements RuleElement
+class Variable implements RuleElement, ValueElement
 {
     use ValueAvailable;
 
@@ -24,56 +25,6 @@ class Variable implements RuleElement
     public static function create(string $name, mixed $value = null): static
     {
         return new self($name, $value);
-    }
-
-    public function equalTo(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_equalTo_%s', $this->getName(), $variable->getName()),
-            $this->value === $variable->value
-        );
-
-    }
-
-    public function notEqualTo(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_notEqualTo_%s', $this->getName(), $variable->getName()),
-            $this->value !== $variable->value
-        );
-    }
-
-    public function greaterThan(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_greaterThan_%s', $this->getName(), $variable->getName()),
-            $this->value > $variable->value
-        );
-    }
-
-    public function lessThan(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_lessThan_%s', $this->getName(), $variable->getName()),
-            $this->value < $variable->value
-        );
-    }
-
-    public function greaterThanOrEqualTo(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_greaterThanOrEqualTo_%s', $this->getName(), $variable->getName()),
-            $this->value >= $variable->value
-        );
-
-    }
-
-    public function lessThanOrEqualTo(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_lessThanOrEqualTo_%s', $this->getName(), $variable->getName()),
-            $this->value <= $variable->value
-        );
     }
 
     public function in(self $variable): Proposition
