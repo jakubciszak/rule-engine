@@ -73,23 +73,13 @@ class Rule implements RuleInterface
     public function evaluate(RuleContext $context): Proposition
     {
         $this->elements->forEach(fn (RuleElement $element) => $this->prepareElement($element, $context));
-        return $this->process($this->elements);
+        return $this->process($this->elements, $context);
     }
 
     private function prepareElement(RuleElement $element, RuleContext $context): bool
     {
-        if ($this->isPropositionOrVariable($element)) {
-            $ruleElement = $context->findElement($element);
-            /** @var ValueAvailable $ruleElement */
-            /** @var ValueAvailable $element  */
-            if ($ruleElement === null) {
-                $ruleElement = clone $element;
-            }
-            if ($ruleElement->getValue() === null) {
-                $ruleElement->setValue($element->getValue());
-            }
-            $element->setValue($ruleElement->getValue());
-        }
+        // With immutable objects, we don't need to synchronize values via setValue
+        // The context will provide the canonical values during evaluation
         return true;
     }
 
@@ -108,23 +98,23 @@ class Rule implements RuleInterface
         return $element->getType()->isOneOf(RuleElementType::PROPOSITION, RuleElementType::VARIABLE);
     }
 
-    private function process(GenericList $elements): Proposition
+    private function process(GenericList $elements, RuleContext $context): Proposition
     {
         $stack = [];
-        $elements->forEach(function (RuleElement $ruleElement) use (&$stack) {
-            return $this->processRuleElement($stack, $ruleElement);
+        $elements->forEach(function (RuleElement $ruleElement) use (&$stack, $context) {
+            return $this->processRuleElement($stack, $ruleElement, $context);
         });
         return array_shift($stack) ?? Proposition::success();
     }
 
-    private function processRuleElement(array &$stack, RuleElement $ruleElement): bool
+    private function processRuleElement(array &$stack, RuleElement $ruleElement, RuleContext $context): bool
     {
         if ($this->isOperator($ruleElement)) {
             /** @var Operator $ruleElement */
             $this->processOperator($stack, $ruleElement);
         } elseif ($this->isPropositionOrVariable($ruleElement)) {
             /** @var Proposition|Variable $ruleElement */
-            $this->processPropositionOrVariable($stack, $ruleElement);
+            $this->processPropositionOrVariable($stack, $ruleElement, $context);
         }
         return true;
     }
@@ -139,9 +129,17 @@ class Rule implements RuleInterface
         $this->invokePredicate($stack, $ruleElement);
     }
 
-    private function processPropositionOrVariable(array &$stack, RuleElement $ruleElement): void
+    private function processPropositionOrVariable(array &$stack, RuleElement $ruleElement, RuleContext $context): void
     {
-        $stack = array_merge($stack, [$ruleElement]);
+        // Check if there's an element with the same name in the context
+        $contextElement = $context->findElement($ruleElement);
+        if ($contextElement !== null) {
+            // Use the element from context as it has the canonical value
+            $stack = array_merge($stack, [$contextElement]);
+        } else {
+            // Use the original element if not found in context
+            $stack = array_merge($stack, [$ruleElement]);
+        }
     }
 
     private function invokePredicate(array &$stack, Operator $operator): void

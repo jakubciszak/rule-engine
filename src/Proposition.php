@@ -1,14 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace JakubCiszak\RuleEngine;
 
 use Closure;
 
-class Proposition implements RuleElement, ValueElement
+readonly class Proposition implements RuleElement, ValueElement
 {
     use ValueAvailable;
 
-    private function __construct(private readonly string $name, null|Closure|bool $value)
+    private function __construct(private string $name, null|Closure|bool $value)
     {
         $this->value = $value;
     }

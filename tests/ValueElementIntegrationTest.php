@@ -22,12 +22,13 @@ class ValueElementIntegrationTest extends TestCase
         $this->assertInstanceOf(ValueElement::class, $variable);
         $this->assertInstanceOf(ValueElement::class, $proposition);
         
-        // Requirement: getValue and setValue methods should be available
+        // Requirement: getValue method should be available
         $this->assertEquals(100, $variable->getValue());
         $this->assertTrue($proposition->getValue());
         
-        $variable->setValue(200);
-        $this->assertEquals(200, $variable->getValue());
+        // With immutable objects, we create new instances instead of modifying existing ones
+        $updatedVariable = Variable::create('testVar', 200);
+        $this->assertEquals(200, $updatedVariable->getValue());
         
         // Requirement: equalTo and notEqualTo methods should accept ValueElement interface
         $var1 = Variable::create('var1', 'test');
@@ -66,7 +67,7 @@ class ValueElementIntegrationTest extends TestCase
         
         $variable = Variable::create('var', 'value');
         $proposition = Proposition::create('prop', true);
-        $proposition->setValue('value');
+        // With immutable objects, we create with the value we need
         
         // Both should have the methods from ValueAvailable trait
         $this->assertTrue(method_exists($variable, 'equalTo'));

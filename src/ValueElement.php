@@ -7,8 +7,6 @@ interface ValueElement
 {
     public function getValue(): mixed;
     
-    public function setValue(mixed $value): void;
-    
     public function equalTo(ValueElement $element): Proposition;
     
     public function notEqualTo(ValueElement $element): Proposition;

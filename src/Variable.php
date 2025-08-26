@@ -1,12 +1,13 @@
 <?php
+declare(strict_types=1);
 
 namespace JakubCiszak\RuleEngine;
 
-class Variable implements RuleElement, ValueElement
+readonly class Variable implements RuleElement, ValueElement
 {
     use ValueAvailable;
 
-    private function __construct(private readonly string $name, mixed $value)
+    private function __construct(private string $name, mixed $value)
     {
         $this->value = $value;
     }
