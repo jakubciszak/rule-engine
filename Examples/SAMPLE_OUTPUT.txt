@@ -1,0 +1,42 @@
+=== KYC Basic Risk Scoring Example - Sample Output ===
+
+This shows what the BasicRiskScoring.php example would output when run:
+
+=== KYC Basic Risk Scoring Example ===
+
+Processing: Low Risk Customer
+Initial Data: Age=28, Income=$75,000, Country=US, Employment=employed
+Risk Assessment Results:
+  → Total Risk Score: 0
+  → Risk Level: LOW
+  → Recommendation: Approve with standard monitoring
+
+----------------------------------------------------------------------
+
+Processing: Medium Risk Customer
+Initial Data: Age=45, Income=$150,000, Country=BR, Employment=self_employed
+Risk Assessment Results:
+  → High income with short employment history (+20 risk points)
+  → Total Risk Score: 35
+  → Risk Level: LOW
+  → Recommendation: Approve with standard monitoring
+
+----------------------------------------------------------------------
+
+Processing: High Risk Customer
+Initial Data: Age=19, Income=$500,000, Country=PK, Employment=unemployed
+Risk Assessment Results:
+  → Suspicious income pattern detected (+50 risk points)
+  → Total Risk Score: 135
+  → Risk Level: HIGH
+  → Recommendation: Require manual review and additional documentation
+
+----------------------------------------------------------------------
+
+=== Risk Scoring Rules Summary ===
+• Age Risk: Under 21 or over 80 (+25), Age 21-24 (+10)
+• Income Risk: High income + unemployed (+50), High income + short employment (+20)
+• Geographic Risk: High-risk countries (+30), Medium-risk countries (+15)
+• Employment Risk: Unemployed (+20), Criminal record (+40)
+• Credit Risk: Poor credit <600 (+25), Excellent credit >750 (-10)
+• Risk Levels: 0-39 (LOW), 40-79 (MEDIUM), 80+ (HIGH)
