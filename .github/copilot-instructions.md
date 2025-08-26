@@ -1,239 +1,232 @@
 
 # Copilot Instructions for rule-engine
 
-These instructions guide GitHub Copilot (coding agent) when working in this repository. They define scope, guardrails, preferred workflows, and acceptance criteria so the agent can produce small, high-quality pull requests.
+**ALWAYS follow these instructions first and fallback to additional search and context gathering only if the information in the instructions is incomplete or found to be in error.**
 
-## Repository context
+These instructions guide GitHub Copilot (coding agent) when working in this repository after a fresh clone. They define the exact commands, timing expectations, and validation steps needed for effective development.
 
-Language: PHP 8.4
+## Repository Overview
 
-Standards: PSR-12, 4-space indentation, declare(strict_types=1); at the top of every PHP file
+**Language:** PHP 8.4
+**Type:** Composer library implementing the Rule Archetype Pattern
+**Architecture:** DDD-inspired modules with immutable domain objects
+**Standards:** PSR-12, 4-space indentation, `declare(strict_types=1);` at top of every PHP file
 
-Architecture: DDD-inspired modules, prefer immutability in domain layer (value objects, readonly where possible), small and composable services
+## Essential First Steps After Fresh Clone
 
-Packaging: Composer library
+### 1. Install Dependencies
+```bash
+composer install --ignore-platform-reqs --no-interaction
+```
+**TIMING:** Takes approximately 18-20 seconds. NEVER CANCEL.
+**ISSUES:** May encounter GitHub authentication errors - uses fallback git cloning automatically.
+**NOTE:** `--ignore-platform-reqs` required if not using PHP 8.4 exactly.
 
-Testing: PHPUnit
+### 2. Validate Installation
+```bash
+vendor/bin/phpunit --version
+```
+**EXPECTED OUTPUT:** PHPUnit 11.5.34 by Sebastian Bergmann and contributors.
 
-Static analysis: PHPStan (high level)
+### 3. Run Test Suite
+```bash
+vendor/bin/phpunit
+```
+**TIMING:** Completes in 0.04 seconds. NEVER CANCEL.
+**EXPECTED:** 42 tests, 90 assertions, all passing
+**OUTPUT FORMAT:** Use `vendor/bin/phpunit --testdox` for detailed test descriptions
 
-CI: GitHub Actions run tests and static analysis
+### 4. Validate Examples Structure
+```bash
+php Examples/validate_examples.php
+```
+**TIMING:** Completes in 0.04 seconds. NEVER CANCEL.
+**PURPOSE:** Verifies all KYC example files exist and have proper structure without requiring dependencies
 
+## Working Effectively
 
-## Rules of engagement
+### Build and Test Workflow
+Always run this sequence before making changes:
+```bash
+composer install --ignore-platform-reqs --no-interaction
+vendor/bin/phpunit
+php Examples/validate_examples.php
+```
+**TOTAL TIME:** Under 25 seconds. NEVER CANCEL any of these commands.
 
-1. Prefer small, incremental PRs that touch a limited area of code.
+### Development Commands
+- **Run specific test:** `vendor/bin/phpunit tests/SpecificTest.php`
+- **Run with coverage:** `vendor/bin/phpunit --coverage-text`
+- **Syntax check:** `php -l src/SomeFile.php`
+- **Check autoloader:** `composer dump-autoload`
 
+### Static Analysis (Not Currently Configured)
+PHPStan is mentioned in existing instructions but not currently installed. To add it:
+```bash
+composer require --dev phpstan/phpstan
+vendor/bin/phpstan analyze src
+```
+**WARNING:** Not part of current CI pipeline - only add if explicitly requested.
 
-2. Do not introduce new runtime dependencies without an explicit instruction in the task.
+## Validation Scenarios
 
+### CRITICAL: Always Test Rule Engine Functionality
+After making any changes to core rule engine logic, validate with:
 
-3. Do not change public API or DSL semantics unless the task explicitly asks for it. If a change is necessary, propose it in the PR description with a migration path.
+1. **Basic API functionality:**
+```bash
+vendor/bin/phpunit tests/FlatRuleAPITest.php
+vendor/bin/phpunit tests/NestedRuleApiTest.php
+vendor/bin/phpunit tests/StringRuleApiTest.php
+```
 
+2. **Example structure validation:**
+```bash
+php Examples/validate_examples.php
+```
 
-4. Always add or update tests that cover new or changed behavior.
+### WARNING: Example Runtime Issues
+The KYC examples in `Examples/KYC/` have runtime errors when executed:
+```bash
+php Examples/KYC/BasicRiskScoring.php
+```
+**KNOWN ISSUE:** Fatal error on `Proposition::equalTo()` method
+**ACTION:** Do NOT attempt to run the KYC examples directly - they are structural examples only
+**VALIDATION:** Use `php Examples/validate_examples.php` instead
 
+## Key Repository Locations
 
-5. Keep static analysis clean - no new PHPStan issues.
+### Source Code (`src/`)
+- **`src/Api/`** - Main APIs: FlatRuleAPI, NestedRuleApi, StringRuleApi
+- **`src/Exception/`** - Custom exceptions
+- **`src/*.php`** - Core domain objects: Rule, Ruleset, Variable, Proposition
 
+### Tests (`tests/`)
+- **Complete test coverage** - 42 tests covering all APIs and core functionality
+- **Test structure:** One test file per main class
+- **Test timing:** Entire suite runs in ~0.04 seconds
 
-6. Follow repository conventions strictly: strict types, full parameter and return types, final where sensible, readonly data where applicable.
+### Examples (`Examples/`)
+- **`Examples/KYC/`** - Real-world KYC onboarding scenarios (structural only)
+- **`Examples/README.md`** - Documentation and usage instructions
+- **`Examples/validate_examples.php`** - Structure validation script
 
+### Configuration
+- **`composer.json`** - Dependencies and autoloading
+- **`phpunit.xml`** - PHPUnit configuration
+- **`.github/workflows/run-tests.yml`** - CI pipeline
 
-7. Keep documentation in sync. If behavior changes, update docs/ and examples.
+## Development Guidelines
 
-
-
-## High-signal tasks for the agent
-
-Add or extend unit tests for evaluators, conditions, and DSL parsing.
-
-Improve error handling and messages, including negative test cases.
-
-Small refactors that remove duplication or dead code without changing public API.
-
-Documentation improvements with runnable examples in examples/.
-
-
-Avoid: large architectural rewrites, sweeping renames, or cross-cutting changes in a single PR.
-
-Project layout to rely on
-
-src/ - production code organized by domain/module
-
-tests/ - unit and integration tests
-
-docs/ - DSL and usage documentation
-
-examples/ - small runnable examples
-
-
-Read before coding:
-
-README.md
-
-docs in docs/ relevant to the touched module
-
-
-### Environment and commands
-
-Before making changes, ensure a clean baseline:
-
-composer install
-composer test
-composer phpstan
-
-CI will run the same commands. Do not modify CI workflows unless explicitly asked.
-
-### Coding guidelines
-
+### PHP Code Standards
 Always start PHP files with:
-
 ```php
 <?php
 declare(strict_types=1);
 ```
 
-Use explicit parameter and return types everywhere.
-
-Prefer final classes and immutability in domain objects.
-
-Keep constructors small; extract validation to dedicated methods where appropriate.
-
-No use of global state or singletons in new code.
-
-
-## Test policy
-
-Every behavioral change must include tests.
-
-Use descriptive, behavior-oriented test names:
-
-test_it_evaluates_true_when_left_is_greater_than_right
-
-
-Cover edge cases and invalid inputs (nulls, wrong types, boundary values).
-
-Favor pure, isolated unit tests. Use integration tests only when IO or external protocols are involved.
-
-
-## Static analysis policy
-
-Run composer phpstan locally and keep the report clean.
-
-If suppression is unavoidable, scope it as narrowly as possible and add a short justification comment.
-
-
-## Pull request checklist
-
-The agent must verify all items before requesting review:
-
-[ ] Code follows repo style: strict types, typed signatures, final where sensible
-
-[ ] New or changed behavior covered by tests
-
-[ ] composer test passes locally
-
-[ ] composer phpstan passes with no new issues
-
-[ ] Public API and DSL are unchanged, or changes are documented with migration notes
-
-[ ] Docs updated if behavior or DSL changed
-
-[ ] No new runtime dependencies were added without explicit instruction
-
-
-## Commit and PR conventions
-
-Keep commits focused; use Conventional Commits where reasonable:
-
-feat: add >= and <= comparison evaluator
-
-fix: handle null right operand in GreaterThan
-
-docs: clarify precedence of boolean operators
-
-
-## PR description must include:
-
-Problem statement and scope
-
-Summary of changes
-
-Test coverage summary
-
-Impact on public API or DSL (none or detailed)
-
-Risk and rollback notes if applicable
-
-
-
-## Ready-made task templates
-
-1) Add unit tests for comparison operators
-
-Goal:
-
-Add tests for >, >=, <, <= including boundaries and invalid inputs.
-
-
-## Acceptance:
-
-[ ] New test file (e.g., tests/Evaluator/ComparisonOperatorsTest.php)
-
-[ ] Edge cases covered: equality, negatives, floats
-
-[ ] Invalid inputs covered: null, non-numeric strings
-
-[ ] No new PHPStan issues
-
-
-2) Improve DSL parser error messages
-
-Goal:
-
-Unify exception messages and add simple error codes.
-
-
-Acceptance:
-
-[ ] Parser throws domain exceptions with clear messages and codes
-
-[ ] Tests for the 3 most common syntax errors
-
-[ ] docs/dsl.md updated with error reference
-
-
-3) Dead code removal in src/Rule/
-
-Goal:
-
-Remove unused private methods and add final where sensible.
-
-
-Acceptance:
-
-[ ] No public API changes
-
-[ ] Tests and PHPStan green
-
-[ ] No behavior change
-
-
-Guardrails and anti-goals
-
-Do not change file headers, license statements, or package metadata unless asked.
-
-Do not add code generators or eval-based features.
-
-Do not reformat the entire codebase in one PR.
-
-Do not weaken validations to make tests pass - fix the code or the tests correctly.
-
-
-Review expectations
-
-The agent should be responsive to review comments, pushing focused follow-ups.
-
-If a requested change is ambiguous, ask for clarification in the PR comments and propose a concrete option.
+### Required Practices
+- Use explicit parameter and return types everywhere
+- Prefer `final` classes and immutability in domain objects
+- Keep constructors small
+- No global state or singletons
+
+### Testing Requirements
+- Every behavioral change must include tests
+- Use descriptive test names: `test_it_evaluates_true_when_condition_met`
+- Cover edge cases: nulls, wrong types, boundary values
+- Prefer unit tests over integration tests
+
+## Common Tasks
+
+### Add New Rule Operator
+1. Create operator class in `src/`
+2. Add corresponding test in `tests/`
+3. Update API classes if needed
+4. Run full test suite
+5. **Expected time:** 30-60 minutes including tests
+
+### Fix Rule Evaluation Logic
+1. Identify failing test or create new test
+2. Modify core logic in `src/Rule.php` or related classes
+3. Ensure all existing tests still pass
+4. **Expected time:** 15-30 minutes
+
+### Add New API Method
+1. Extend appropriate API class in `src/Api/`
+2. Create comprehensive test coverage
+3. Update README.md if public API
+4. **Expected time:** 45-90 minutes
+
+## Troubleshooting
+
+### Composer Install Fails
+- **GitHub auth errors:** Use `--no-interaction` flag
+- **Platform requirements:** Use `--ignore-platform-reqs` flag
+- **Network timeouts:** Wait for git fallback (automatic)
+
+### Tests Fail
+- **PHPUnit not found:** Run `composer install` first
+- **Autoload errors:** Run `composer dump-autoload`
+- **Memory issues:** Increase PHP memory limit
+
+### Examples Don't Run
+- **Expected behavior:** Examples have runtime errors
+- **Correct validation:** Use `php Examples/validate_examples.php`
+- **Do not attempt:** Running KYC examples directly
+
+## CI Pipeline
+
+GitHub Actions runs:
+```yaml
+- PHP 8.4 setup
+- composer install
+- vendor/bin/phpunit
+```
+**Timing:** Entire CI takes ~2-3 minutes
+**NEVER CANCEL:** All CI commands have appropriate timeouts
+
+## Ready-Made Commands Reference
+
+```bash
+# Essential setup (run once after clone)
+composer install --ignore-platform-reqs --no-interaction
+
+# Development workflow (run before/after changes)
+vendor/bin/phpunit
+php Examples/validate_examples.php
+
+# Test specific components
+vendor/bin/phpunit tests/FlatRuleAPITest.php
+vendor/bin/phpunit tests/NestedRuleApiTest.php  
+vendor/bin/phpunit tests/StringRuleApiTest.php
+
+# Check syntax
+php -l src/SomeFile.php
+
+# Repository exploration
+cat README.md
+cat Examples/README.md
+ls src/Api/
+```
+
+## Critical Timing and Timeout Guidelines
+
+- **composer install:** 18-20 seconds, timeout: 60 seconds
+- **vendor/bin/phpunit:** 0.04 seconds, timeout: 30 seconds
+- **Example validation:** 0.04 seconds, timeout: 30 seconds
+- **CI pipeline:** 2-3 minutes total
+
+**NEVER CANCEL** any build or test command. If commands appear to hang, wait at least 60 seconds before considering alternatives.
+
+## Acceptance Criteria for Changes
+
+Before requesting review, verify:
+- [ ] `composer install` completes successfully
+- [ ] `vendor/bin/phpunit` passes all 42 tests
+- [ ] `php Examples/validate_examples.php` reports all files valid
+- [ ] New/changed behavior has test coverage
+- [ ] Code follows strict typing and final class patterns
+- [ ] No new runtime dependencies added without explicit instruction
+- [ ] Public API unchanged or migration path documented
 
