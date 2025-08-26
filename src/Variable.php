@@ -2,7 +2,7 @@
 
 namespace JakubCiszak\RuleEngine;
 
-class Variable implements RuleElement
+class Variable implements RuleElement, ValueElement
 {
     use ValueAvailable;
 
@@ -24,23 +24,6 @@ class Variable implements RuleElement
     public static function create(string $name, mixed $value = null): static
     {
         return new self($name, $value);
-    }
-
-    public function equalTo(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_equalTo_%s', $this->getName(), $variable->getName()),
-            $this->value === $variable->value
-        );
-
-    }
-
-    public function notEqualTo(self $variable): Proposition
-    {
-        return Proposition::create(
-            sprintf('%s_notEqualTo_%s', $this->getName(), $variable->getName()),
-            $this->value !== $variable->value
-        );
     }
 
     public function greaterThan(self $variable): Proposition
