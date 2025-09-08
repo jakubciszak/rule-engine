@@ -17,14 +17,18 @@ class Ruleset
 
     public function evaluate(RuleContext $context): Proposition
     {
-        $result = Proposition::success();
+        $overallSuccess = true;
+        $lastResult = Proposition::success();
+        
         foreach ($this->rules as $rule) {
             $result = $rule->evaluate($context);
+            $lastResult = $result;
+            
             if (!$result->getValue()) {
-                return $result;
+                $overallSuccess = false;
             }
         }
 
-        return $result;
+        return $overallSuccess ? $lastResult : Proposition::create('ruleset_failure', false);
     }
 }
