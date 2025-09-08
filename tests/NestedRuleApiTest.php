@@ -242,4 +242,199 @@ final class NestedRuleApiTest extends TestCase
         self::assertTrue(NestedRuleApi::evaluate($ruleset, $data));
         self::assertSame(1, $data['generated']);
     }
+
+    public function testWildcardExpansion(): void
+    {
+        // Test Example 1 from the issue - checking all streets are not empty
+        $rules = [
+            'and' => [
+                ['!=' => [['var' => 'addresses.*.street'], '']]
+            ]
+        ];
+
+        $data = [
+            'addresses' => [
+                ['street' => 'Długa 1', 'city' => 'Warsaw', 'zip' => '00-001'],
+                ['street' => '',        'city' => 'Kraków', 'zip' => '31-001'],
+                ['street' => 'Ogrodowa 7', 'city' => 'Gdańsk', 'zip' => '80-001']
+            ]
+        ];
+
+        // This should expand to check addresses.0.street, addresses.1.street, addresses.2.street
+        // The rule should fail because addresses.1.street is empty
+        $result = NestedRuleApi::evaluate($rules, $data);
+        self::assertFalse($result);
+        
+        // Verify the context was flattened and contains the expanded keys
+        self::assertArrayHasKey('addresses.0.street', $data);
+        self::assertArrayHasKey('addresses.1.street', $data);
+        self::assertArrayHasKey('addresses.2.street', $data);
+        self::assertSame('Długa 1', $data['addresses.0.street']);
+        self::assertSame('', $data['addresses.1.street']);
+        self::assertSame('Ogrodowa 7', $data['addresses.2.street']);
+    }
+
+    public function testWildcardWithOperators(): void
+    {
+        // Test Example 2 from the issue - using actual operators
+        $rules = [
+            'and' => [
+                ['==' => [['var' => 'addresses.*.zip'], '^[0-9]{2}-[0-9]{3}$']], // This would need regex operator
+                ['in' => [['var' => 'addresses.*.city'], ['Warsaw', 'Gdańsk']]]
+            ]
+        ];
+
+        $data = [
+            'addresses' => [
+                ['street' => 'Długa 1', 'city' => 'Warsaw', 'zip' => '00-001'],
+                ['street' => 'Rynek 2', 'city' => 'Kraków', 'zip' => '31-001']
+            ]
+        ];
+
+        // This should expand to check all addresses
+        // Should fail because Kraków is not in ['Warsaw', 'Gdańsk']
+        self::assertFalse(NestedRuleApi::evaluate($rules, $data));
+    }
+
+    public function testWildcardSuccess(): void
+    {
+        // Test case where wildcard rules should pass
+        $rules = [
+            'and' => [
+                ['!=' => [['var' => 'addresses.*.street'], '']] // All streets should be non-empty
+            ]
+        ];
+
+        $data = [
+            'addresses' => [
+                ['street' => 'Długa 1', 'city' => 'Warsaw'],
+                ['street' => 'Ogrodowa 7', 'city' => 'Gdańsk']
+            ]
+        ];
+
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
+    }
+
+    public function testWildcardWithEmptyArray(): void
+    {
+        // Test wildcard with empty array
+        $rules = [
+            'and' => [
+                ['!=' => [['var' => 'items.*.name'], '']]
+            ]
+        ];
+
+        $data = [
+            'items' => []
+        ];
+
+        // Should return true when array is empty (vacuous truth)
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
+    }
+
+    public function testWildcardWithNonArrayValue(): void
+    {
+        // Test wildcard when the referenced key is not an array
+        $rules = [
+            'and' => [
+                ['!=' => [['var' => 'value.*.name'], '']]
+            ]
+        ];
+
+        $data = [
+            'value' => 'not_an_array'
+        ];
+
+        // Should return true when no wildcard matches found (vacuous truth)
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
+    }
+
+    public function testMultipleWildcards(): void
+    {
+        // Test multiple wildcard expressions
+        $rules = [
+            'and' => [
+                ['!=' => [['var' => 'users.*.name'], '']],
+                ['>' => [['var' => 'users.*.age'], 0]]
+            ]
+        ];
+
+        $data = [
+            'users' => [
+                ['name' => 'John', 'age' => 25],
+                ['name' => 'Jane', 'age' => 30]
+            ]
+        ];
+
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
+    }
+
+    public function testNestedWildcards(): void
+    {
+        // Test nested arrays with wildcards
+        $rules = [
+            'and' => [
+                ['!=' => [['var' => 'departments.*.employees.*.name'], '']]
+            ]
+        ];
+
+        $data = [
+            'departments' => [
+                [
+                    'name' => 'Engineering',
+                    'employees' => [
+                        ['name' => 'Alice', 'role' => 'Developer'],
+                        ['name' => 'Bob', 'role' => 'Architect']
+                    ]
+                ],
+                [
+                    'name' => 'Marketing', 
+                    'employees' => [
+                        ['name' => 'Charlie', 'role' => 'Manager']
+                    ]
+                ]
+            ]
+        ];
+
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data));
+        
+        // Verify flattened structure
+        self::assertArrayHasKey('departments.0.employees.0.name', $data);
+        self::assertArrayHasKey('departments.0.employees.1.name', $data);
+        self::assertArrayHasKey('departments.1.employees.0.name', $data);
+        self::assertSame('Alice', $data['departments.0.employees.0.name']);
+        self::assertSame('Bob', $data['departments.0.employees.1.name']);
+        self::assertSame('Charlie', $data['departments.1.employees.0.name']);
+    }
+
+    public function testWildcardExampleFromIssue(): void
+    {
+        // Test exact example from issue description (Example 2)
+        $rules = [
+            'and' => [
+                ['in' => [['var' => 'addresses.*.city'], ['Warsaw', 'Gdańsk']]]
+            ]
+        ];
+
+        $data = [
+            'addresses' => [
+                ['street' => 'Długa 1', 'city' => 'Warsaw', 'zip' => '00-001'],
+                ['street' => 'Rynek 2', 'city' => 'Kraków', 'zip' => '31-001']
+            ]
+        ];
+
+        // Should fail because Kraków is not in ['Warsaw', 'Gdańsk']
+        self::assertFalse(NestedRuleApi::evaluate($rules, $data));
+        
+        // Test success case
+        $data2 = [
+            'addresses' => [
+                ['street' => 'Długa 1', 'city' => 'Warsaw', 'zip' => '00-001'],
+                ['street' => 'Rynek 2', 'city' => 'Gdańsk', 'zip' => '31-001']
+            ]
+        ];
+
+        // Should pass because both Warsaw and Gdańsk are in the allowed list
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data2));
+    }
 }
