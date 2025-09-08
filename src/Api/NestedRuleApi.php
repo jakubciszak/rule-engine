@@ -16,41 +16,51 @@ final class NestedRuleApi
 
     public static function evaluate(array $rules, array &$data = []): bool
     {
-        $context = self::createContext($data);
+        // Flatten nested data to support wildcard expansion
+        $flatData = self::flattenData($data);
+        
+        // Expand wildcards in rules
+        $expandedRules = self::expandWildcards($rules, $flatData);
+        
+        $context = self::createContext($flatData);
 
-        if (is_array($rules) && self::isRulesetArray($rules)) {
+        if (is_array($expandedRules) && self::isRulesetArray($expandedRules)) {
             $ruleObjects = array_map(
-                static function (string $name) use ($rules, $data): RuleInterface {
-                    $definition = $rules[$name];
+                static function (string $name) use ($expandedRules, $flatData): RuleInterface {
+                    $definition = $expandedRules[$name];
                     $actions = self::extractActions($definition);
 
                     $rule = new Rule($name);
-                    self::parseExpression($definition, $rule, $data);
+                    self::parseExpression($definition, $rule, $flatData);
 
                     return $actions === [] ? $rule : self::decorateWithActions($rule, $actions);
                 },
-                array_keys($rules)
+                array_keys($expandedRules)
             );
 
             $ruleset = new Ruleset(...$ruleObjects);
             $result = $ruleset->evaluate($context)->getValue();
-            $data = $context->toArray();
+            
+            // Merge flat data back to original structure and update reference
+            $data = array_merge($data, $context->toArray());
             return $result;
         }
 
-        if (is_array($rules)) {
-            $actions = self::extractActions($rules);
+        if (is_array($expandedRules)) {
+            $actions = self::extractActions($expandedRules);
         } else {
             $actions = [];
         }
 
         $rule = new Rule('json_rule');
-        self::parseExpression($rules, $rule, $data);
+        self::parseExpression($expandedRules, $rule, $flatData);
 
         $executor = $actions === [] ? $rule : self::decorateWithActions($rule, $actions);
 
         $result = $executor->evaluate($context)->getValue();
-        $data = $context->toArray();
+        
+        // Merge flat data back to original structure and update reference
+        $data = array_merge($data, $context->toArray());
         return $result;
     }
 
@@ -202,5 +212,205 @@ final class NestedRuleApi
         }
 
         return $context;
+    }
+
+    /**
+     * Flatten nested array data to dotted notation
+     */
+    private static function flattenData(array $data, string $prefix = ''): array
+    {
+        $flattened = [];
+        
+        foreach ($data as $key => $value) {
+            $newKey = $prefix === '' ? $key : $prefix . '.' . $key;
+            
+            if (is_array($value) && !empty($value)) {
+                // Check if this is a numeric-indexed array (list)
+                $isNumericArray = array_keys($value) === range(0, count($value) - 1);
+                
+                if ($isNumericArray) {
+                    // Handle numeric arrays - flatten each element with index
+                    foreach ($value as $index => $item) {
+                        $indexedKey = $newKey . '.' . $index;
+                        if (is_array($item)) {
+                            $flattened = array_merge($flattened, self::flattenData($item, $indexedKey));
+                        } else {
+                            $flattened[$indexedKey] = $item;
+                        }
+                    }
+                } else {
+                    // Handle associative arrays - continue flattening
+                    $flattened = array_merge($flattened, self::flattenData($value, $newKey));
+                }
+            } else {
+                $flattened[$newKey] = $value;
+            }
+        }
+        
+        return $flattened;
+    }
+
+    /**
+     * Expand wildcard patterns in rules
+     */
+    private static function expandWildcards(array $rules, array $flatData): array
+    {
+        // Deep copy rules to avoid modifying original
+        $expandedRules = $rules;
+        
+        // Find all paths that need expansion
+        $wildcardPaths = self::findWildcardPaths($expandedRules);
+        
+        if (empty($wildcardPaths)) {
+            return $expandedRules;
+        }
+        
+        // For each wildcard path, find matching keys and expand
+        foreach ($wildcardPaths as $wildcardPath) {
+            $matchingKeys = self::findMatchingKeys($wildcardPath, $flatData);
+            $expandedRules = self::expandRuleForPath($expandedRules, $wildcardPath, $matchingKeys);
+        }
+        
+        return $expandedRules;
+    }
+
+    /**
+     * Find all wildcard paths in rule structure
+     */
+    private static function findWildcardPaths(array $rules, array &$paths = []): array
+    {
+        foreach ($rules as $key => $value) {
+            if (is_array($value)) {
+                if ($key === 'var' && is_string($value) && str_contains($value, '*')) {
+                    $paths[] = $value;
+                } elseif (is_string($key) && is_string($value) && str_contains($value, '*')) {
+                    // Handle cases where var might be a direct value
+                    $paths[] = $value;
+                } else {
+                    self::findWildcardPaths($value, $paths);
+                }
+            } elseif (is_string($value) && str_contains($value, '*')) {
+                // Direct string value that contains wildcard
+                $paths[] = $value;
+            }
+        }
+        
+        return $paths;
+    }
+
+    /**
+     * Find keys in flat data that match a wildcard pattern
+     */
+    private static function findMatchingKeys(string $wildcardPath, array $flatData): array
+    {
+        $pattern = str_replace('.', '\.', $wildcardPath);
+        $pattern = str_replace('*', '[0-9]+', $pattern);
+        $pattern = '/^' . $pattern . '$/';
+        
+        $matchingKeys = [];
+        foreach (array_keys($flatData) as $key) {
+            if (preg_match($pattern, $key)) {
+                $matchingKeys[] = $key;
+            }
+        }
+        
+        return $matchingKeys;
+    }
+
+    /**
+     * Expand a rule structure to handle multiple concrete paths instead of wildcard
+     */
+    private static function expandRuleForPath(array $rules, string $wildcardPath, array $concreteKeys): array
+    {
+        if (empty($concreteKeys)) {
+            return $rules;
+        }
+        
+        // For logical operators (and, or), we need to expand the rules
+        foreach ($rules as $operator => $operands) {
+            if ($operator === 'and' || $operator === 'or') {
+                $expandedOperands = [];
+                
+                foreach ($operands as $operand) {
+                    if (is_array($operand) && self::containsWildcardPath($operand, $wildcardPath)) {
+                        // Expand this operand for each concrete key
+                        foreach ($concreteKeys as $concreteKey) {
+                            $expandedOperand = self::replaceWildcardInOperand($operand, $wildcardPath, $concreteKey);
+                            $expandedOperands[] = $expandedOperand;
+                        }
+                    } else {
+                        $expandedOperands[] = $operand;
+                    }
+                }
+                
+                $rules[$operator] = $expandedOperands;
+            }
+        }
+        
+        return $rules;
+    }
+
+    /**
+     * Check if an operand contains a specific wildcard path
+     */
+    private static function containsWildcardPath(array $operand, string $wildcardPath): bool
+    {
+        if (isset($operand['var']) && $operand['var'] === $wildcardPath) {
+            return true;
+        }
+        
+        // Recursively check nested arrays for wildcard patterns
+        return self::containsWildcardPathRecursive($operand, $wildcardPath);
+    }
+
+    /**
+     * Recursively search for wildcard path in nested arrays
+     */
+    private static function containsWildcardPathRecursive(array $data, string $wildcardPath): bool
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                if (isset($value['var']) && $value['var'] === $wildcardPath) {
+                    return true;
+                }
+                // Recursively check deeper
+                if (self::containsWildcardPathRecursive($value, $wildcardPath)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Replace wildcard path with concrete path in an operand
+     */
+    private static function replaceWildcardInOperand(array $operand, string $wildcardPath, string $concreteKey): array
+    {
+        $result = $operand;
+        
+        // Recursively replace wildcard paths
+        $result = self::replaceWildcardRecursive($result, $wildcardPath, $concreteKey);
+        
+        return $result;
+    }
+
+    /**
+     * Recursively replace wildcard paths in nested arrays
+     */
+    private static function replaceWildcardRecursive(array $data, string $wildcardPath, string $concreteKey): array
+    {
+        foreach ($data as $key => &$value) {
+            if (is_array($value)) {
+                if (isset($value['var']) && $value['var'] === $wildcardPath) {
+                    $value['var'] = $concreteKey;
+                } else {
+                    $value = self::replaceWildcardRecursive($value, $wildcardPath, $concreteKey);
+                }
+            }
+        }
+        
+        return $data;
     }
 }
