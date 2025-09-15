@@ -107,7 +107,7 @@ function ofacSanctionsScreening(array &$customer): bool
         ],
         'ofac_potential_match_high' => [
             'and' => [
-                ['==' => [['var' => 'ofac_screening_result'], 'potential_match'],
+                ['==' => [['var' => 'ofac_screening_result'], 'potential_match']],
                 ['>=' => [['var' => 'sanctions_match_score'], 80]]
             ],
             'actions' => [
@@ -118,7 +118,7 @@ function ofacSanctionsScreening(array &$customer): bool
         ],
         'ofac_potential_match_medium' => [
             'and' => [
-                ['==' => [['var' => 'ofac_screening_result'], 'potential_match'],
+                ['==' => [['var' => 'ofac_screening_result'], 'potential_match']],
                 ['>=' => [['var' => 'sanctions_match_score'], 50]],
                 ['<' => [['var' => 'sanctions_match_score'], 80]]
             ],
@@ -130,7 +130,7 @@ function ofacSanctionsScreening(array &$customer): bool
         ],
         'ofac_potential_match_low' => [
             'and' => [
-                ['==' => [['var' => 'ofac_screening_result'], 'potential_match'],
+                ['==' => [['var' => 'ofac_screening_result'], 'potential_match']],
                 ['<' => [['var' => 'sanctions_match_score'], 50]]
             ],
             'actions' => [
@@ -330,7 +330,7 @@ function businessEntityScreening(array &$customer): bool
     
     $rules = [
         'business_sanctions_screening' => [
-            '!=' => [['var' => 'business_name'], null],
+            '!=' => [['var' => 'business_name'], ''],
             'actions' => [
                 '.compliance_score + 5',
                 '.compliance_alerts + BUSINESS_ENTITY_SCREENING_REQUIRED'

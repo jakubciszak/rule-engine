@@ -10,6 +10,7 @@ final class FlatRuleAPI
 {
     private function __construct()
     {
+        // we want to prevent creating instances of this class
     }
 
     public static function evaluate(array $rulesetData, array &$contextData = []): bool
