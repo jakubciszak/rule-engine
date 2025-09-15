@@ -1,20 +1,19 @@
 <?php
+declare(strict_types=1);
 
 namespace JakubCiszak\RuleEngine;
 
-use Munus\Collection\GenericList;
-
 class Rule implements RuleInterface
 {
-    /** @var GenericList<RuleElement> */
-    private GenericList $elements;
+    /** @var array<RuleElement> */
+    private array $elements;
 
     public function __construct(public readonly string $name)
     {
-        $this->elements = GenericList::empty();
+        $this->elements = [];
     }
 
-    public function elements(): GenericList
+    public function elements(): array
     {
         return $this->elements;
     }
@@ -71,13 +70,15 @@ class Rule implements RuleInterface
     
     public function addElement(RuleElement $element): self
     {
-        $this->elements = $this->elements->append($element);
+        $this->elements[] = $element;
         return $this;
     }
 
     public function evaluate(RuleContext $context): Proposition
     {
-        $this->elements->forEach(fn (RuleElement $element) => $this->prepareElement($element, $context));
+        foreach ($this->elements as $element) {
+            $this->prepareElement($element, $context);
+        }
         return $this->process($this->elements, $context);
     }
 
@@ -103,12 +104,12 @@ class Rule implements RuleInterface
         return $element->getType()->isOneOf(RuleElementType::PROPOSITION, RuleElementType::VARIABLE);
     }
 
-    private function process(GenericList $elements, RuleContext $context): Proposition
+    private function process(array $elements, RuleContext $context): Proposition
     {
         $stack = [];
-        $elements->forEach(function (RuleElement $ruleElement) use (&$stack, $context) {
-            return $this->processRuleElement($stack, $ruleElement, $context);
-        });
+        foreach ($elements as $ruleElement) {
+            $this->processRuleElement($stack, $ruleElement, $context);
+        }
         return array_shift($stack) ?? Proposition::success();
     }
 
