@@ -2,7 +2,7 @@
 
 /**
  * Basic Risk Scoring Example for KYC Onboarding
- * 
+ *
  * This example demonstrates how to use the Rule Engine for basic customer risk assessment
  * during the KYC onboarding process. It evaluates fundamental customer data to determine
  * initial risk scores.
@@ -171,8 +171,12 @@ function employmentCreditRiskAssessment(array &$customer): bool
  */
 function getRiskLevel(int $score): string
 {
-    if ($score >= 80) return 'HIGH';
-    if ($score >= 40) return 'MEDIUM';
+    if ($score >= 80) {
+        return 'HIGH';
+    }
+    if ($score >= 40) {
+        return 'MEDIUM';
+    }
     return 'LOW';
 }
 
@@ -206,6 +210,8 @@ foreach ($customers as $customerType => $customer) {
         case 'HIGH':
             echo "  → Recommendation: Require manual review and additional documentation\n";
             break;
+        default:
+            throw new LogicException('Unexpected value');
     }
     
     echo "\n" . str_repeat('-', 70) . "\n\n";

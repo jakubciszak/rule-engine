@@ -44,19 +44,16 @@ final class ActionParser
     private static function parseValue(string $token): mixed
     {
         $token = trim($token);
+        $result = $token;
 
         if (str_starts_with($token, '.')) {
-            return Variable::create(substr($token, 1));
+            $result = Variable::create(substr($token, 1));
+        } elseif (is_numeric($token)) {
+            $result = $token + 0;
+        } elseif (in_array($token, ['true', 'false'], true)) {
+            $result = $token === 'true';
         }
 
-        if (is_numeric($token)) {
-            return $token + 0;
-        }
-
-        if (in_array($token, ['true', 'false'], true)) {
-            return $token === 'true';
-        }
-
-        return $token;
+        return $result;
     }
 }

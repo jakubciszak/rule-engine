@@ -14,6 +14,11 @@ class Rule implements RuleInterface
         $this->elements = GenericList::empty();
     }
 
+    public function elements(): GenericList
+    {
+        return $this->elements;
+    }
+
     public function and(): self
     {
         return $this->addElement(Operator::AND);

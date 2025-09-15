@@ -2,7 +2,7 @@
 
 /**
  * Final Risk Assessment Example for KYC Onboarding
- * 
+ *
  * This example demonstrates how to use the Rule Engine to combine multiple risk factors
  * from basic scoring, document verification, enhanced due diligence, and sanctions screening
  * into a comprehensive final risk assessment and onboarding decision.
@@ -21,110 +21,110 @@ $customers = [
     'low_risk_approved' => [
         'customer_id' => 'LOW001',
         'customer_name' => 'Sarah Johnson',
-        
+
         // Basic Risk Factors
         'basic_risk_score' => 15,
         'age' => 32,
         'income_risk_level' => 'low',
         'geographic_risk_level' => 'low',
         'employment_risk_level' => 'low',
-        
+
         // Document Verification
         'document_verification_score' => 85,
         'document_verification_status' => 'approved',
         'documents_complete' => true,
         'document_quality_adequate' => true,
-        
+
         // Enhanced Due Diligence
         'edd_required' => false,
         'edd_score' => 10,
         'is_high_value_customer' => false,
         'complex_source_of_funds' => false,
-        
+
         // Sanctions and Compliance
         'sanctions_screening_clear' => true,
         'compliance_score' => 5,
         'manual_review_required' => false,
         'compliance_alerts_count' => 0,
-        
+
         // Final Assessment Fields
         'final_risk_score' => 0,
         'final_risk_level' => 'pending',
         'onboarding_decision' => 'pending',
         'monitoring_level' => 'standard',
         'approval_level_required' => 'none',
-        'conditions' => [],
+        'conditions' => null,
         'next_review_date' => null,
     ],
-    
+
     'medium_risk_conditional' => [
         'customer_id' => 'MED001',
         'customer_name' => 'Carlos Rodriguez',
-        
+
         // Basic Risk Factors
         'basic_risk_score' => 45,
         'age' => 28,
         'income_risk_level' => 'medium',
         'geographic_risk_level' => 'medium',
         'employment_risk_level' => 'medium',
-        
+
         // Document Verification
         'document_verification_score' => 70,
         'document_verification_status' => 'approved_with_conditions',
         'documents_complete' => true,
         'document_quality_adequate' => true,
-        
+
         // Enhanced Due Diligence
         'edd_required' => true,
         'edd_score' => 55,
         'is_high_value_customer' => true,
         'complex_source_of_funds' => true,
-        
+
         // Sanctions and Compliance
         'sanctions_screening_clear' => true,
         'compliance_score' => 25,
         'manual_review_required' => true,
         'compliance_alerts_count' => 2,
-        
+
         // Final Assessment Fields
         'final_risk_score' => 0,
         'final_risk_level' => 'pending',
         'onboarding_decision' => 'pending',
         'monitoring_level' => 'standard',
         'approval_level_required' => 'none',
-        'conditions' => [],
+        'conditions' => null,
         'next_review_date' => null,
     ],
-    
+
     'high_risk_rejected' => [
         'customer_id' => 'HIGH001',
         'customer_name' => 'Viktor Petrov',
-        
+
         // Basic Risk Factors
         'basic_risk_score' => 85,
         'age' => 45,
         'income_risk_level' => 'high',
         'geographic_risk_level' => 'high',
         'employment_risk_level' => 'high',
-        
+
         // Document Verification
         'document_verification_score' => 40,
         'document_verification_status' => 'additional_documents_required',
         'documents_complete' => false,
         'document_quality_adequate' => false,
-        
+
         // Enhanced Due Diligence
         'edd_required' => true,
         'edd_score' => 95,
         'is_high_value_customer' => true,
         'complex_source_of_funds' => true,
-        
+
         // Sanctions and Compliance
         'sanctions_screening_clear' => false,
         'compliance_score' => 75,
         'manual_review_required' => true,
         'compliance_alerts_count' => 5,
-        
+
         // Final Assessment Fields
         'final_risk_score' => 0,
         'final_risk_level' => 'pending',
@@ -183,34 +183,34 @@ function integrateDocumentVerification(array &$customer): bool
     ];
 
     $result = false;
-    
+
     if (StringRuleApi::evaluate($rules['document_verification_bonus'], $customer)) {
         $customer['final_risk_score'] -= 10; // Reduce risk for good documentation
         echo "  → Excellent document verification (-10 risk points)\n";
         $result = true;
     }
-    
+
     if (StringRuleApi::evaluate($rules['document_quality_issue'], $customer)) {
         $customer['final_risk_score'] += 25;
         $customer['conditions'][] = 'IMPROVED_DOCUMENTATION_REQUIRED';
         echo "  → Document quality issues (+25 risk points)\n";
         $result = true;
     }
-    
+
     if (StringRuleApi::evaluate($rules['incomplete_documents'], $customer)) {
         $customer['final_risk_score'] += 30;
         $customer['conditions'][] = 'COMPLETE_DOCUMENTATION_REQUIRED';
         echo "  → Incomplete documentation (+30 risk points)\n";
         $result = true;
     }
-    
+
     if (StringRuleApi::evaluate($rules['low_verification_score'], $customer)) {
         $customer['final_risk_score'] += 40;
         $customer['approval_level_required'] = 'senior_compliance';
         echo "  → Low document verification score (+40 risk points)\n";
         $result = true;
     }
-    
+
     return $result;
 }
 
@@ -325,25 +325,30 @@ function determineFinalRiskLevel(array &$customer): bool
         'low_risk' => 'final_risk_score < 50'
     ];
 
-    if (StringRuleApi::evaluate($rules['critical_risk'], $customer)) {
-        $customer['final_risk_level'] = 'CRITICAL';
-        $customer['monitoring_level'] = 'intensive';
-        return true;
-    } elseif (StringRuleApi::evaluate($rules['high_risk'], $customer)) {
-        $customer['final_risk_level'] = 'HIGH';
-        $customer['monitoring_level'] = 'enhanced';
-        return true;
-    } elseif (StringRuleApi::evaluate($rules['medium_risk'], $customer)) {
-        $customer['final_risk_level'] = 'MEDIUM';
-        $customer['monitoring_level'] = 'enhanced';
-        return true;
-    } elseif (StringRuleApi::evaluate($rules['low_risk'], $customer)) {
-        $customer['final_risk_level'] = 'LOW';
-        $customer['monitoring_level'] = 'standard';
-        return true;
+    $result = false;
+    $level = null;
+    $monitoring = null;
+
+    foreach ([
+        'critical_risk' => ['CRITICAL', 'intensive'],
+        'high_risk' => ['HIGH', 'enhanced'],
+        'medium_risk' => ['MEDIUM', 'enhanced'],
+        'low_risk' => ['LOW', 'standard']
+    ] as $key => [$riskLevel, $monitoringLevel]) {
+        if (StringRuleApi::evaluate($rules[$key], $customer)) {
+            $level = $riskLevel;
+            $monitoring = $monitoringLevel;
+            $result = true;
+            break;
+        }
     }
-    
-    return false;
+
+    if ($level !== null) {
+        $customer['final_risk_level'] = $level;
+        $customer['monitoring_level'] = $monitoring;
+    }
+
+    return $result;
 }
 
 /**
@@ -355,7 +360,7 @@ function makeFinalOnboardingDecision(array &$customer): bool
     if ($customer['onboarding_decision'] === 'blocked') {
         return true; // Already blocked by sanctions
     }
-    
+
     $rules = [
         'auto_approve' => [
             'and' => [
@@ -384,9 +389,9 @@ function makeFinalOnboardingDecision(array &$customer): bool
         ],
         'reject_application' => [
             'or' => [
-                ['==' => [['var' => 'final_risk_level'], 'CRITICAL'],
+                ['==' => [['var' => 'final_risk_level'], 'CRITICAL']],
                 ['>' => [['var' => 'final_risk_score'], 120]],
-                ['==' => [['var' => 'sanctions_screening_clear'], false]]
+                ['==' => [['var' => 'sanctions_screening_clear'], false]],
             ],
             'actions' => ['.onboarding_decision = rejected']
         ]
@@ -405,7 +410,7 @@ function setReviewSchedule(array &$customer): void
         'enhanced' => '+3 months',
         'standard' => '+12 months'
     ];
-    
+
     $interval = $reviewIntervals[$customer['monitoring_level']] ?? '+12 months';
     $customer['next_review_date'] = date('Y-m-d', strtotime($interval));
 }
@@ -416,42 +421,44 @@ function setReviewSchedule(array &$customer): void
 function getOnboardingRecommendations(array $customer): array
 {
     $recommendations = [];
-    
+
     switch ($customer['onboarding_decision']) {
         case 'approved':
             $recommendations[] = 'Customer approved for standard onboarding';
             $recommendations[] = "Apply {$customer['monitoring_level']} monitoring level";
             $recommendations[] = "Next review scheduled for {$customer['next_review_date']}";
             break;
-            
+
         case 'approved_with_conditions':
             $recommendations[] = 'Customer approved with conditions';
             $recommendations[] = 'Complete all required conditions before account activation';
             $recommendations[] = "Apply {$customer['monitoring_level']} monitoring level";
             $recommendations[] = "Next review scheduled for {$customer['next_review_date']}";
             break;
-            
+
         case 'manual_review_required':
             $recommendations[] = 'Manual review required before final decision';
             $recommendations[] = "Escalate to {$customer['approval_level_required']} level";
             $recommendations[] = 'Complete enhanced due diligence if not already done';
             $recommendations[] = 'Review all compliance alerts and risk factors';
             break;
-            
+
         case 'rejected':
             $recommendations[] = 'Application rejected - do not proceed with onboarding';
             $recommendations[] = 'Document rejection reason in customer file';
             $recommendations[] = 'Consider filing SAR if suspicious activity detected';
             break;
-            
+
         case 'blocked':
             $recommendations[] = 'Customer blocked - immediate escalation required';
             $recommendations[] = 'Do not proceed under any circumstances';
             $recommendations[] = 'File Suspicious Activity Report (SAR)';
             $recommendations[] = 'Notify senior compliance management';
             break;
+        default:
+            throw new RuntimeException('Unexpected value');
     }
-    
+
     return $recommendations;
 }
 
@@ -471,10 +478,9 @@ function formatConditions(array $conditions): array
         'DETAILED_COMPLIANCE_REVIEW' => 'Detailed compliance review required',
         'MANUAL_COMPLIANCE_REVIEW' => 'Manual compliance officer review required'
     ];
-    
-    return array_map(function($condition) use ($conditionMap) {
-        return $conditionMap[$condition] ?? $condition;
-    }, array_unique($conditions));
+
+
+    return array_map(static fn($condition) => $conditionMap[$condition] ?? $condition, array_unique($conditions));
 }
 
 // Process each customer through the comprehensive final risk assessment
@@ -487,9 +493,9 @@ foreach ($customers as $customerType => $customer) {
     echo "  • EDD Required: " . ($customer['edd_required'] ? 'Yes' : 'No') . " (Score: {$customer['edd_score']})\n";
     echo "  • Sanctions Clear: " . ($customer['sanctions_screening_clear'] ? 'Yes' : 'No') . " (Compliance Score: {$customer['compliance_score']})\n";
     echo "  • Compliance Alerts: {$customer['compliance_alerts_count']}\n";
-    
+
     echo "\nFinal Risk Assessment Process:\n";
-    
+
     // Run comprehensive risk assessment
     integrateBasicRiskFactors($customer);
     integrateDocumentVerification($customer);
@@ -498,34 +504,34 @@ foreach ($customers as $customerType => $customer) {
     determineFinalRiskLevel($customer);
     makeFinalOnboardingDecision($customer);
     setReviewSchedule($customer);
-    
+
     // Get recommendations and format conditions
     $recommendations = getOnboardingRecommendations($customer);
-    $formattedConditions = formatConditions($customer['conditions']);
-    
+    $formattedConditions = formatConditions($customer['conditions'] ?? []);
+
     echo "\nFinal Assessment Results:\n";
     echo "  → Final Risk Score: {$customer['final_risk_score']}\n";
     echo "  → Risk Level: {$customer['final_risk_level']}\n";
     echo "  → Onboarding Decision: " . strtoupper(str_replace('_', ' ', $customer['onboarding_decision'])) . "\n";
     echo "  → Monitoring Level: {$customer['monitoring_level']}\n";
     echo "  → Approval Required: {$customer['approval_level_required']}\n";
-    
+
     if (!empty($formattedConditions)) {
         echo "  → Conditions:\n";
         foreach ($formattedConditions as $condition) {
             echo "    - {$condition}\n";
         }
     }
-    
+
     if ($customer['next_review_date']) {
         echo "  → Next Review Date: {$customer['next_review_date']}\n";
     }
-    
+
     echo "\nRecommendations:\n";
     foreach ($recommendations as $recommendation) {
         echo "  - {$recommendation}\n";
     }
-    
+
     echo "\n" . str_repeat('=', 70) . "\n\n";
 }
 

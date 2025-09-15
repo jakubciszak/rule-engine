@@ -140,7 +140,7 @@ function highValueAssessment(array &$customer): bool
         'high_net_worth' => 'net_worth > 1000000',
         'large_initial_deposit' => 'initial_deposit > 100000',
         'high_monthly_volume' => 'expected_monthly_transactions > 50000',
-        'income_deposit_mismatch' => 'initial_deposit > annual_income * 0.5'
+        'income_deposit_mismatch' => 'initial_deposit > annual_income'
     ];
 
     $result = false;
@@ -151,14 +151,14 @@ function highValueAssessment(array &$customer): bool
         echo "  → High net worth detected (+20 EDD points)\n";
         $result = true;
     }
-    
+
     if (StringRuleApi::evaluate($rules['large_initial_deposit'], $customer)) {
         $customer['edd_score'] += 15;
         $customer['additional_documentation_required'][] = 'source_of_funds_documentation';
         echo "  → Large initial deposit (+15 EDD points)\n";
         $result = true;
     }
-    
+
     if (StringRuleApi::evaluate($rules['high_monthly_volume'], $customer)) {
         $customer['edd_score'] += 10;
         $customer['monitoring_level'] = 'enhanced';
@@ -393,7 +393,7 @@ foreach ($customers as $customerType => $customer) {
     geographicBusinessRiskAssessment($customer);
     sourceVerificationAssessment($customer);
     entityStructureAssessment($customer);
-    
+
     // Determine final requirements
     $eddRequirements = determineFinalEddRequirements($customer);
     $requiredDocs = getRequiredDocumentation($customer);

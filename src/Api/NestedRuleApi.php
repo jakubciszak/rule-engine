@@ -12,6 +12,7 @@ final class NestedRuleApi
 
     private function __construct()
     {
+        // we want to prevent instantiation
     }
 
     public static function evaluate(array $rules, array &$data = []): bool
@@ -93,17 +94,12 @@ final class NestedRuleApi
 
     private static function parseLogical(string $operator, array $values, Rule $rule, array $data): void
     {
-        array_map(
-            static function (mixed $value, int $index) use ($operator, $rule, $data): void {
-                self::parseExpression($value, $rule, $data);
-
-                if ($index > 0) {
-                    $rule->addElement(Operator::create($operator));
-                }
-            },
-            $values,
-            array_keys($values)
-        );
+        foreach ($values as $index => $value) {
+            self::parseExpression($value, $rule, $data);
+            if ($index > 0) {
+                $rule->addElement(Operator::create($operator));
+            }
+        }
     }
 
     private static function parseNot(mixed $value, Rule $rule, array $data): void
@@ -154,7 +150,7 @@ final class NestedRuleApi
 
     private static function isRulesetArray(array $rules): bool
     {
-        if (count($rules) === 0) {
+        if (empty($rules)) {
             return false;
         }
 
@@ -216,38 +212,27 @@ final class NestedRuleApi
 
     /**
      * Flatten nested array data to dotted notation
+     * Cognitive Complexity reduced: no nested ifs, no deep nesting, single recursion point
      */
     private static function flattenData(array $data, string $prefix = ''): array
     {
-        $flattened = [];
-        
+        $result = [];
         foreach ($data as $key => $value) {
-            $newKey = $prefix === '' ? $key : $prefix . '.' . $key;
-            
-            if (is_array($value) && !empty($value)) {
-                // Check if this is a numeric-indexed array (list)
-                $isNumericArray = array_keys($value) === range(0, count($value) - 1);
-                
-                if ($isNumericArray) {
-                    // Handle numeric arrays - flatten each element with index
-                    foreach ($value as $index => $item) {
-                        $indexedKey = $newKey . '.' . $index;
-                        if (is_array($item)) {
-                            $flattened = array_merge($flattened, self::flattenData($item, $indexedKey));
-                        } else {
-                            $flattened[$indexedKey] = $item;
-                        }
-                    }
-                } else {
-                    // Handle associative arrays - continue flattening
-                    $flattened = array_merge($flattened, self::flattenData($value, $newKey));
-                }
-            } else {
-                $flattened[$newKey] = $value;
+            $flatKey = $prefix === '' ? $key : $prefix . '.' . $key;
+            if (!is_array($value) || empty($value)) {
+                $result[$flatKey] = $value;
+                continue;
             }
+            if (array_is_list($value)) {
+                foreach ($value as $i => $item) {
+                    $indexedKey = $flatKey . '.' . $i;
+                    $result += self::flattenData($item, $indexedKey);
+                }
+                continue;
+            }
+            $result += self::flattenData($value, $flatKey);
         }
-        
-        return $flattened;
+        return $result;
     }
 
     /**
@@ -303,8 +288,7 @@ final class NestedRuleApi
      */
     private static function findMatchingKeys(string $wildcardPath, array $flatData): array
     {
-        $pattern = str_replace('.', '\.', $wildcardPath);
-        $pattern = str_replace('*', '[0-9]+', $pattern);
+        $pattern = str_replace(['.', '*'], ['\.', '[0-9]+'], $wildcardPath);
         $pattern = '/^' . $pattern . '$/';
         
         $matchingKeys = [];
@@ -319,35 +303,38 @@ final class NestedRuleApi
 
     /**
      * Expand a rule structure to handle multiple concrete paths instead of wildcard
+     * Cognitive Complexity reduced: helper for expanding operands, early returns, no deep nesting
      */
     private static function expandRuleForPath(array $rules, string $wildcardPath, array $concreteKeys): array
     {
         if (empty($concreteKeys)) {
             return $rules;
         }
-        
-        // For logical operators (and, or), we need to expand the rules
         foreach ($rules as $operator => $operands) {
-            if ($operator === 'and' || $operator === 'or') {
-                $expandedOperands = [];
-                
-                foreach ($operands as $operand) {
-                    if (is_array($operand) && self::containsWildcardPath($operand, $wildcardPath)) {
-                        // Expand this operand for each concrete key
-                        foreach ($concreteKeys as $concreteKey) {
-                            $expandedOperand = self::replaceWildcardInOperand($operand, $wildcardPath, $concreteKey);
-                            $expandedOperands[] = $expandedOperand;
-                        }
-                    } else {
-                        $expandedOperands[] = $operand;
-                    }
+            if ($operator !== 'and' && $operator !== 'or') {
+                continue;
+            }
+            $rules[$operator] = self::expandOperands($operands, $wildcardPath, $concreteKeys);
+        }
+        return $rules;
+    }
+
+    /**
+     * Helper to expand operands for logical operators
+     */
+    private static function expandOperands(array $operands, string $wildcardPath, array $concreteKeys): array
+    {
+        $expanded = [];
+        foreach ($operands as $operand) {
+            if (is_array($operand) && self::containsWildcardPath($operand, $wildcardPath)) {
+                foreach ($concreteKeys as $concreteKey) {
+                    $expanded[] = self::replaceWildcardInOperand($operand, $wildcardPath, $concreteKey);
                 }
-                
-                $rules[$operator] = $expandedOperands;
+            } else {
+                $expanded[] = $operand;
             }
         }
-        
-        return $rules;
+        return $expanded;
     }
 
     /**
@@ -368,7 +355,7 @@ final class NestedRuleApi
      */
     private static function containsWildcardPathRecursive(array $data, string $wildcardPath): bool
     {
-        foreach ($data as $key => $value) {
+        foreach ($data as $value) {
             if (is_array($value)) {
                 if (isset($value['var']) && $value['var'] === $wildcardPath) {
                     return true;
@@ -389,11 +376,9 @@ final class NestedRuleApi
     private static function replaceWildcardInOperand(array $operand, string $wildcardPath, string $concreteKey): array
     {
         $result = $operand;
-        
+
         // Recursively replace wildcard paths
-        $result = self::replaceWildcardRecursive($result, $wildcardPath, $concreteKey);
-        
-        return $result;
+        return self::replaceWildcardRecursive($result, $wildcardPath, $concreteKey);
     }
 
     /**
@@ -401,7 +386,7 @@ final class NestedRuleApi
      */
     private static function replaceWildcardRecursive(array $data, string $wildcardPath, string $concreteKey): array
     {
-        foreach ($data as $key => &$value) {
+        foreach ($data as &$value) {
             if (is_array($value)) {
                 if (isset($value['var']) && $value['var'] === $wildcardPath) {
                     $value['var'] = $concreteKey;

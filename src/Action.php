@@ -2,11 +2,11 @@
 
 namespace JakubCiszak\RuleEngine;
 
-final class Action
+final readonly class Action
 {
     public function __construct(
-        private readonly ActionType $type,
-        private readonly string $variable,
+        private ActionType $type,
+        private string $variable,
         private mixed $value
     ) {
     }
@@ -25,13 +25,35 @@ final class Action
         $value = $this->resolveValue($context);
 
         $newValue = match ($this->type) {
-            ActionType::ADD => ($current ?? 0) + $value,
+            ActionType::ADD => $this->handleAddition($current, $value),
             ActionType::SUBTRACT => ($current ?? 0) - $value,
             ActionType::CONCAT => (string)($current ?? '') . (string)$value,
             ActionType::SET => $value,
         };
 
         $context->variable($this->variable, $newValue);
+    }
+
+    private function handleAddition(mixed $current, mixed $value): mixed
+    {
+        if (null === $current || (is_numeric($current) && is_numeric($value))) {
+            return ($current ?? 0) + $value;
+        }
+
+        if (is_array($current)) {
+            if (is_array($value)) {
+                return array_merge($current, $value);
+            }
+
+            $current[] = $value;
+            return $current;
+        }
+
+        if ($current === null) {
+            return is_array($value) ? $value : [$value];
+        }
+
+        return [$current, $value];
     }
 
     private function resolveValue(RuleContext $context): mixed
