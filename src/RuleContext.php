@@ -1,22 +1,21 @@
 <?php
+declare(strict_types=1);
 
 namespace JakubCiszak\RuleEngine;
 
-use Munus\Collection\Map;
-
 class RuleContext
 {
-    /** @var Map<RuleElement> */
-    private Map $elements;
+    /** @var array<string, RuleElement> */
+    private array $elements;
 
     public function __construct()
     {
-        $this->elements = Map::empty();
+        $this->elements = [];
     }
 
     public function addElement(RuleElement $ruleElement): self
     {
-        $this->elements = $this->elements->put($ruleElement->getName(), $ruleElement);
+        $this->elements[$ruleElement->getName()] = $ruleElement;
         return $this;
     }
 
@@ -33,29 +32,24 @@ class RuleContext
     public function append(RuleContext $context): self
     {
         $newContext = new RuleContext();
-        $newContext->setElements($this->elements->merge($context->elements));
+        $newContext->setElements(array_merge($this->elements, $context->elements));
         return $newContext;
     }
 
-    private function setElements(Map $elements): void
+    private function setElements(array $elements): void
     {
         $this->elements = $elements;
     }
 
     public function findElement(RuleElement $ruleElement): ?RuleElement
     {
-        return $this->elements->get($ruleElement->getName())->getOrElse(null);
+        return $this->elements[$ruleElement->getName()] ?? null;
     }
 
     public function toArray(): array
     {
         $result = [];
-        $iterator = $this->elements->getIterator();
-        while ($iterator->hasNext()) {
-            /** @var \Munus\Tuple\Tuple2 $tuple */
-            $tuple = $iterator->next();
-            $name = $tuple[0];
-            $element = $tuple[1];
+        foreach ($this->elements as $name => $element) {
             if (method_exists($element, 'getValue')) {
                 $result[$name] = $element->getValue();
             }

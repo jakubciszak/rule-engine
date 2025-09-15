@@ -280,6 +280,6 @@ This project is licensed under the MIT License.
 
 ## Additional Information
 
-- The project uses the `munusphp/munus` library for functional programming constructs.
+- The project uses native PHP arrays for optimal performance and simplicity.
 - The source code is located in the `src/` directory.
 - Tests are located in the `tests/` directory.
