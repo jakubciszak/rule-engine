@@ -6,7 +6,7 @@ use Closure;
 
 interface RuleInterface
 {
-    public string $name {get;}
+    public function getName(): string;
     public function and(): self;
     public function or(): self;
     public function not(): self;

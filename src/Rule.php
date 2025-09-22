@@ -13,6 +13,12 @@ class Rule implements RuleInterface
         $this->elements = [];
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /** @return array<RuleElement> */
     public function elements(): array
     {
         return $this->elements;
@@ -94,15 +100,24 @@ class Rule implements RuleInterface
         return $element->getType()->isOneOf(RuleElementType::PROPOSITION, RuleElementType::VARIABLE);
     }
 
+    /**
+     * @param array<RuleElement> $elements
+     */
     private function process(array $elements, RuleContext $context): Proposition
     {
+        /** @var array<RuleElement> $stack */
         $stack = [];
         foreach ($elements as $ruleElement) {
             $this->processRuleElement($stack, $ruleElement, $context);
         }
-        return array_shift($stack) ?? Proposition::success();
+        $result = array_shift($stack);
+        // After processing, the top of stack should be a Proposition
+        return $result instanceof Proposition ? $result : Proposition::success();
     }
 
+    /**
+     * @param array<RuleElement> $stack
+     */
     private function processRuleElement(array &$stack, RuleElement $ruleElement, RuleContext $context): bool
     {
         if ($this->isOperator($ruleElement)) {
@@ -120,35 +135,46 @@ class Rule implements RuleInterface
         return $ruleElement->getType()->isOneOf(RuleElementType::OPERATOR);
     }
 
+    /**
+     * @param array<RuleElement> $stack
+     */
     private function processOperator(array &$stack, Operator $ruleElement): void
     {
         $this->invokePredicate($stack, $ruleElement);
     }
 
+    /**
+     * @param array<RuleElement> $stack
+     */
     private function processPropositionOrVariable(array &$stack, RuleElement $ruleElement, RuleContext $context): void
     {
         // Check if there's an element with the same name in the context
         $contextElement = $context->findElement($ruleElement);
         if ($contextElement !== null) {
             // Use the element from context as it has the canonical value
-            $stack = array_merge($stack, [$contextElement]);
+            $stack[] = $contextElement;
         } else {
             // Use the original element if not found in context
-            $stack = array_merge($stack, [$ruleElement]);
+            $stack[] = $ruleElement;
         }
     }
 
+    /**
+     * @param array<RuleElement> $stack
+     */
     private function invokePredicate(array &$stack, Operator $operator): void
     {
         if ($operator === Operator::NOT) {
             /** @var Proposition $element */
             $element = array_pop($stack);
-            $stack = array_merge($stack, [$element->not()]);
+            array_push($stack, $element->not());
         } else {
+            /** @var Proposition $leftElement */
             $leftElement = array_pop($stack);
+            /** @var Proposition $rightElement */
             $rightElement = array_pop($stack);
             $operation = $operator->toOperationName();
-            $stack = array_merge($stack, [$leftElement->$operation($rightElement)]);
+            array_push($stack, $leftElement->$operation($rightElement));
         }
     }
 }

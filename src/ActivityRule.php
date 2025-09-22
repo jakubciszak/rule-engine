@@ -6,8 +6,6 @@ use Closure;
 
 final readonly class ActivityRule implements RuleInterface
 {
-    public string $name;
-
     /** @var Closure(RuleContext):mixed */
     private Closure $activity;
 
@@ -19,7 +17,11 @@ final readonly class ActivityRule implements RuleInterface
         Closure $activity,
     ) {
         $this->activity = $activity;
-        $this->name = $rule->name;
+    }
+
+    public function getName(): string
+    {
+        return $this->rule->getName();
     }
 
     public function and(): self
