@@ -13,6 +13,11 @@ class Rule implements RuleInterface
         $this->elements = [];
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
     public function elements(): array
     {
         return $this->elements;
