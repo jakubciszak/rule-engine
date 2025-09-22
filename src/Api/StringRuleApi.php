@@ -137,11 +137,11 @@ final class StringRuleApi
             if (array_key_exists($lower, self::PRECEDENCE)) {
                 if ($lower === 'not' || $lower === '!') {
                     $operand = array_pop($stack);
-                    $stack[] = array_merge($operand, [$token]);
+                    $stack[] = array_merge($operand ?? [], [$token]);
                 } else {
                     $right = array_pop($stack);
                     $left = array_pop($stack);
-                    $stack[] = array_merge($right, $left, [$token]);
+                    $stack[] = array_merge($right ?? [], $left ?? [], [$token]);
                 }
             } else {
                 $stack[] = [$token];

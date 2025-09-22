@@ -92,7 +92,7 @@ class Rule implements RuleInterface
 
     public function proposition(string $name, null|\Closure|bool $value = true): self
     {
-        return $this->addElement(Proposition::create($name, $value));
+        return $this->addElement(Proposition::create($name, $value ?? true));
     }
 
     private function isPropositionOrVariable(RuleElement $element): bool

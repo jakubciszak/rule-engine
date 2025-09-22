@@ -4,6 +4,7 @@ namespace JakubCiszak\RuleEngine\Api;
 
 use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset, Action, ActivityRule, RuleInterface};
 use JakubCiszak\RuleEngine\Api\ActionParser;
+use InvalidArgumentException;
 
 final class NestedRuleApi
 {
@@ -29,6 +30,9 @@ final class NestedRuleApi
             $ruleObjects = array_map(
                 static function (string $name) use ($expandedRules, $flatData): RuleInterface {
                     $definition = $expandedRules[$name];
+                    if (!is_array($definition)) {
+                        throw new InvalidArgumentException("Rule definition must be an array for rule: $name");
+                    }
                     $actions = self::extractActions($definition);
 
                     $rule = new Rule($name);
@@ -186,10 +190,16 @@ final class NestedRuleApi
      */
     private static function extractActions(array &$definition): array
     {
+        /** @var string[] $actions */
         $actions = [];
 
         if (isset($definition['actions']) && is_array($definition['actions'])) {
-            $actions = $definition['actions'];
+            $definitionActions = $definition['actions'];
+            foreach ($definitionActions as $action) {
+                if (is_string($action)) {
+                    $actions[] = $action;
+                }
+            }
             unset($definition['actions']);
         }
 
@@ -250,10 +260,16 @@ final class NestedRuleApi
             if (array_is_list($value)) {
                 foreach ($value as $i => $item) {
                     $indexedKey = $flatKey . '.' . $i;
-                    $result += self::flattenData($item, $indexedKey);
+                    if (is_array($item)) {
+                        /** @var array<string, mixed> $item */
+                        $result += self::flattenData($item, $indexedKey);
+                    } else {
+                        $result[$indexedKey] = $item;
+                    }
                 }
                 continue;
             }
+            /** @var array<string, mixed> $value */
             $result += self::flattenData($value, $flatKey);
         }
         return $result;
@@ -342,6 +358,9 @@ final class NestedRuleApi
         }
         foreach ($rules as $operator => $operands) {
             if ($operator !== 'and' && $operator !== 'or') {
+                continue;
+            }
+            if (!is_array($operands)) {
                 continue;
             }
             $rules[$operator] = self::expandOperands($operands, $wildcardPath, $concreteKeys);

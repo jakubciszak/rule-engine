@@ -26,7 +26,12 @@ class RuleContext
 
     public function proposition(string $name, mixed $value = null): self
     {
-        return $this->addElement(Proposition::create($name, $value));
+        $propositionValue = match (true) {
+            $value instanceof \Closure => $value,
+            is_bool($value) => $value,
+            default => true
+        };
+        return $this->addElement(Proposition::create($name, $propositionValue));
     }
 
     public function append(RuleContext $context): self

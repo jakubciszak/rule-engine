@@ -7,7 +7,7 @@ interface ValueElement
 {
     public function getValue(): mixed;
 
-    public function getName(): mixed;
+    public function getName(): string;
 
     public function equalTo(ValueElement $element): Proposition;
     
