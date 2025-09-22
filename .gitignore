@@ -2,4 +2,6 @@ vendor/
 .idea/
 composer.phar
 .phpunit.result.cache
+phpstan.phar
+phpunit-stub.php
 

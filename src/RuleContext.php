@@ -41,9 +41,10 @@ class RuleContext
         $this->elements = $elements;
     }
 
-    public function findElement(RuleElement $ruleElement): ?RuleElement
+    public function findElement(RuleElement $ruleElement): ?ValueElement
     {
-        return $this->elements[$ruleElement->getName()] ?? null;
+        $element = $this->elements[$ruleElement->getName()] ?? null;
+        return $element instanceof ValueElement ? $element : null;
     }
 
     /** @return array<string, mixed> */
