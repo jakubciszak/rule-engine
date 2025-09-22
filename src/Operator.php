@@ -27,9 +27,9 @@ enum Operator implements RuleElement
         return RuleElementType::OPERATOR;
     }
 
-    public static function create(string $symbol): static
+    public static function create(string $name): self
     {
-        return match (strtolower($symbol)) {
+        return match (strtolower($name)) {
             'and' => self::AND,
             'or' => self::OR,
             'not', '!' => self::NOT,

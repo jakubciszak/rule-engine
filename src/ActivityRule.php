@@ -4,24 +4,22 @@ namespace JakubCiszak\RuleEngine;
 
 use Closure;
 
-/**
- * @template T of callable(RuleContext): mixed
- */
-final class ActivityRule implements RuleInterface
+final readonly class ActivityRule implements RuleInterface
 {
-    /** @var T */
-    private readonly Closure $activity;
-    public readonly string $name;
+    public string $name;
+
+    /** @var Closure(RuleContext):mixed */
+    private Closure $activity;
 
     /**
-     * @param T $activity
+     * @param Closure(RuleContext):mixed $activity
      */
     public function __construct(
-        private readonly RuleInterface $rule,
-        callable $activity
+        private RuleInterface $rule,
+        Closure $activity,
     ) {
-        $this->activity = Closure::fromCallable($activity);
-        $this->name = property_exists($rule, 'name') ? $rule->name : '';
+        $this->activity = $activity;
+        $this->name = $rule->name;
     }
 
     public function and(): self
@@ -108,9 +106,12 @@ final class ActivityRule implements RuleInterface
         return $this;
     }
 
-    public function proposition(string $name, null|Closure|bool $closure = true): self
+    /**
+     * @param null|bool|Closure(RuleContext):bool $value
+     */
+    public function proposition(string $name, null|bool|Closure $value = true): self
     {
-        $this->rule->proposition($name, $closure);
+        $this->rule->proposition($name, $value);
 
         return $this;
     }
@@ -125,3 +126,4 @@ final class ActivityRule implements RuleInterface
         return $result;
     }
 }
+

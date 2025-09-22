@@ -24,5 +24,10 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --no-suggest --prefer-dist
 
+      - name: Run PHPSTAN
+        run: vendor/bin/phpstan analyse -c phpstan.neon --no-progress --no-interaction --no-ansi
+
       - name: Run tests
         run: vendor/bin/phpunit
+
+

@@ -2,6 +2,8 @@
 
 namespace JakubCiszak\RuleEngine;
 
+use InvalidArgumentException;
+
 enum ActionType
 {
     case ADD;
@@ -16,6 +18,7 @@ enum ActionType
             'SUBTRACT' => self::SUBTRACT,
             'CONCAT' => self::CONCAT,
             'SET' => self::SET,
+            default => throw new InvalidArgumentException(sprintf('Invalid action type: %s', $name)),
         };
     }
 }

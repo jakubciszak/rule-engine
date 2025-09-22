@@ -18,10 +18,7 @@ class ValueElementIntegrationTest extends TestCase
         // Requirement: Variable and Proposition should implement ValueElement interface
         $variable = Variable::create('testVar', 100);
         $proposition = Proposition::create('testProp', true);
-        
-        $this->assertInstanceOf(ValueElement::class, $variable);
-        $this->assertInstanceOf(ValueElement::class, $proposition);
-        
+
         // Requirement: getValue method should be available
         $this->assertEquals(100, $variable->getValue());
         $this->assertTrue($proposition->getValue());
@@ -37,7 +34,6 @@ class ValueElementIntegrationTest extends TestCase
         
         // Variable comparing with Variable (using ValueElement interface)
         $result1 = $var1->equalTo($var2);
-        $this->assertInstanceOf(Proposition::class, $result1);
         $this->assertTrue($result1->getValue());
         
         // Variable comparing with Proposition (using ValueElement interface)  
@@ -45,39 +41,23 @@ class ValueElementIntegrationTest extends TestCase
         $prop1 = Proposition::create('prop1', false);
         $var_bool = Variable::create('var_bool', false);
         $result2 = $var_bool->equalTo($prop1);
-        $this->assertInstanceOf(Proposition::class, $result2);
         $this->assertTrue($result2->getValue());
         
         // Proposition comparing with Variable (using ValueElement interface)
         $result3 = $prop1->notEqualTo($var1);
-        $this->assertInstanceOf(Proposition::class, $result3);
         $this->assertTrue($result3->getValue()); // false !== 'test' is true
         
         // Test notEqualTo method
         $var3 = Variable::create('var3', 'different');
         $result4 = $var1->notEqualTo($var3);
-        $this->assertInstanceOf(Proposition::class, $result4);
         $this->assertTrue($result4->getValue());
     }
     
     public function testMethodsMovedFromVariableToValueAvailable(): void
     {
-        // Verify that equalTo and notEqualTo were moved from Variable to ValueAvailable trait
-        // and are now available on both Variable and Proposition
-        
-        $variable = Variable::create('var', 'value');
-        $proposition = Proposition::create('prop', true);
-        // With immutable objects, we create with the value we need
-        
-        // Both should have the methods from ValueAvailable trait
-        $this->assertTrue(method_exists($variable, 'equalTo'));
-        $this->assertTrue(method_exists($variable, 'notEqualTo'));
-        $this->assertTrue(method_exists($proposition, 'equalTo'));
-        $this->assertTrue(method_exists($proposition, 'notEqualTo'));
-        
         // Methods should work cross-type with appropriate data types
         $var_true = Variable::create('var_true', true);
-        $prop_true = Proposition::create('prop_true', true);
+        $prop_true = Proposition::create('prop_true');
         $equalResult = $var_true->equalTo($prop_true);
         $this->assertTrue($equalResult->getValue());
     }

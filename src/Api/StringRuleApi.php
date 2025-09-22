@@ -185,7 +185,7 @@ final class StringRuleApi
     {
         $value = self::extractVar($data, $path);
         if (is_bool($value) || is_callable($value)) {
-            $rule->proposition($path, $value ?? true);
+            $rule->proposition($path, $value);
         } else {
             $rule->variable($path, $value);
         }

@@ -5,7 +5,7 @@ namespace JakubCiszak\RuleEngine;
 
 use Closure;
 
-readonly class Proposition implements RuleElement, ValueElement
+final readonly class Proposition implements RuleElement, ValueElement
 {
     use ValueAvailable;
 
@@ -29,7 +29,7 @@ readonly class Proposition implements RuleElement, ValueElement
         return RuleElementType::PROPOSITION;
     }
 
-    public static function create(string $name, Closure|bool $value = true): static
+    public static function create(string $name, Closure|bool $value = true): self
     {
         return new self($name, $value);
     }

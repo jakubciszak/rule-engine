@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JakubCiszak\RuleEngine\Api;
 
 use InvalidArgumentException;
@@ -13,9 +15,13 @@ final class FlatRuleAPI
         // we want to prevent creating instances of this class
     }
 
+    /**
+     * @param array<string, mixed> $rulesetData
+     * @param array<string, mixed> $contextData
+     * @param-out array<string, mixed> $contextData
+     */
     public static function evaluate(array $rulesetData, array &$contextData = []): bool
     {
-
         if (!isset($rulesetData['rules']) || !is_array($rulesetData['rules'])) {
             throw new InvalidArgumentException('Invalid rules data');
         }
@@ -34,6 +40,9 @@ final class FlatRuleAPI
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function createRule(array $data): RuleInterface
     {
         $rule = new Rule($data['name'] ?? uniqid('rule_', true));
@@ -74,6 +83,9 @@ final class FlatRuleAPI
         return $resultRule;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function createContext(array $data): RuleContext
     {
         $context = new RuleContext();
