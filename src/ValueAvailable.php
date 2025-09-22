@@ -11,7 +11,9 @@ trait ValueAvailable
     {
         return $this->value;
     }
-    
+
+    abstract public function getName(): string;
+
     public function equalTo(ValueElement $element): Proposition
     {
         return Proposition::create(

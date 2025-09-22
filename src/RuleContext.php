@@ -46,6 +46,7 @@ class RuleContext
         return $this->elements[$ruleElement->getName()] ?? null;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         $result = [];

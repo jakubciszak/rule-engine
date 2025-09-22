@@ -6,6 +6,7 @@ use Closure;
 
 interface RuleInterface
 {
+    public string $name {get;}
     public function and(): self;
     public function or(): self;
     public function not(): self;
@@ -19,5 +20,5 @@ interface RuleInterface
     public function addElement(RuleElement $element): self;
     public function evaluate(RuleContext $context): Proposition;
     public function variable(string $name, mixed $value = null): self;
-    public function proposition(string $name, null|Closure|bool $closure = true): self;
+    public function proposition(string $name, null|Closure|bool $value = true): self;
 }

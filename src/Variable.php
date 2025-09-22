@@ -22,7 +22,7 @@ readonly class Variable implements RuleElement, ValueElement
         return RuleElementType::VARIABLE;
     }
 
-    public static function create(string $name, mixed $value = null): static
+    public static function create(string $name, mixed $value = null): self
     {
         return new self($name, $value);
     }

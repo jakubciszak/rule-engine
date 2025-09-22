@@ -49,10 +49,6 @@ final readonly class Action
             return $current;
         }
 
-        if ($current === null) {
-            return is_array($value) ? $value : [$value];
-        }
-
         return [$current, $value];
     }
 

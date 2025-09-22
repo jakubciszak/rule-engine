@@ -76,17 +76,7 @@ class Rule implements RuleInterface
 
     public function evaluate(RuleContext $context): Proposition
     {
-        foreach ($this->elements as $element) {
-            $this->prepareElement($element, $context);
-        }
         return $this->process($this->elements, $context);
-    }
-
-    private function prepareElement(RuleElement $element, RuleContext $context): bool
-    {
-        // With immutable objects, we don't need to synchronize values via setValue
-        // The context will provide the canonical values during evaluation
-        return true;
     }
 
     public function variable(string $name, mixed $value = null): self
@@ -94,9 +84,9 @@ class Rule implements RuleInterface
         return $this->addElement(Variable::create($name, $value));
     }
 
-    public function proposition(string $name, null|\Closure|bool $closure = true): self
+    public function proposition(string $name, null|\Closure|bool $value = true): self
     {
-        return $this->addElement(Proposition::create($name, $closure));
+        return $this->addElement(Proposition::create($name, $value));
     }
 
     private function isPropositionOrVariable(RuleElement $element): bool

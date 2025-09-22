@@ -1,0 +1,8 @@
+parameters:
+  level: 5
+  parallel:
+    maximumNumberOfProcesses: 8
+    processTimeout: 300.0
+  paths:
+    - src/
+    - tests/

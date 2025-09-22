@@ -8,7 +8,7 @@ use JakubCiszak\RuleEngine\Api\ActionParser;
 final class NestedRuleApi
 {
     private static int $constCounter = 0;
-    private const OPERATORS = ['and', 'or', '!', 'not', '==', '!=', '>', '<', '>=', '<=', 'in'];
+    private const array OPERATORS = ['and', 'or', '!', 'not', '==', '!=', '>', '<', '>=', '<=', 'in'];
 
     private function __construct()
     {
@@ -17,15 +17,11 @@ final class NestedRuleApi
 
     public static function evaluate(array $rules, array &$data = []): bool
     {
-        // Flatten nested data to support wildcard expansion
         $flatData = self::flattenData($data);
-        
-        // Expand wildcards in rules
         $expandedRules = self::expandWildcards($rules, $flatData);
-        
         $context = self::createContext($flatData);
 
-        if (is_array($expandedRules) && self::isRulesetArray($expandedRules)) {
+        if (self::isRulesetArray($expandedRules)) {
             $ruleObjects = array_map(
                 static function (string $name) use ($expandedRules, $flatData): RuleInterface {
                     $definition = $expandedRules[$name];
@@ -42,16 +38,11 @@ final class NestedRuleApi
             $ruleset = new Ruleset(...$ruleObjects);
             $result = $ruleset->evaluate($context)->getValue();
             
-            // Merge flat data back to original structure and update reference
             $data = array_merge($data, $context->toArray());
             return $result;
         }
 
-        if (is_array($expandedRules)) {
-            $actions = self::extractActions($expandedRules);
-        } else {
-            $actions = [];
-        }
+        $actions = self::extractActions($expandedRules);
 
         $rule = new Rule('json_rule');
         self::parseExpression($expandedRules, $rule, $flatData);
@@ -120,7 +111,7 @@ final class NestedRuleApi
     {
         $value = self::extractVar($data, $path);
         if (is_bool($value) || is_callable($value)) {
-            $rule->proposition($path, $value ?? true);
+            $rule->proposition($path, $value);
         } else {
             $rule->variable($path, $value);
         }
@@ -260,20 +251,18 @@ final class NestedRuleApi
     }
 
     /**
-     * Find all wildcard paths in rule structure
+     * Find all wildcard paths in rule structure.
+     *
+     * @param array<mixed> $rules
+     * @param array<string> $paths
+     *
+     * @return string[]
      */
     private static function findWildcardPaths(array $rules, array &$paths = []): array
     {
-        foreach ($rules as $key => $value) {
+        foreach ($rules as $value) {
             if (is_array($value)) {
-                if ($key === 'var' && is_string($value) && str_contains($value, '*')) {
-                    $paths[] = $value;
-                } elseif (is_string($key) && is_string($value) && str_contains($value, '*')) {
-                    // Handle cases where var might be a direct value
-                    $paths[] = $value;
-                } else {
-                    self::findWildcardPaths($value, $paths);
-                }
+                self::findWildcardPaths($value, $paths);
             } elseif (is_string($value) && str_contains($value, '*')) {
                 // Direct string value that contains wildcard
                 $paths[] = $value;
