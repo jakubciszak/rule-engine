@@ -26,8 +26,8 @@ final readonly class Action
 
         $newValue = match ($this->type) {
             ActionType::ADD => $this->handleAddition($current, $value),
-            ActionType::SUBTRACT => ($current ?? 0) - $value,
-            ActionType::CONCAT => (string)($current ?? '') . (string)$value,
+            ActionType::SUBTRACT => $this->handleSubtraction($current, $value),
+            ActionType::CONCAT => $this->handleConcatenation($current, $value),
             ActionType::SET => $value,
         };
 
@@ -37,7 +37,7 @@ final readonly class Action
     private function handleAddition(mixed $current, mixed $value): mixed
     {
         if (null === $current || (is_numeric($current) && is_numeric($value))) {
-            return ($current ?? 0) + $value;
+            return ($current ?? 0) + (is_numeric($value) ? $value : 0);
         }
 
         if (is_array($current)) {
@@ -50,6 +50,39 @@ final readonly class Action
         }
 
         return [$current, $value];
+    }
+
+    private function handleSubtraction(mixed $current, mixed $value): mixed
+    {
+        if (is_numeric($current) && is_numeric($value)) {
+            return $current - $value;
+        }
+        $currentNum = is_numeric($current) ? $current : 0;
+        $valueNum = is_numeric($value) ? $value : 0;
+        return $currentNum - $valueNum;
+    }
+
+    private function handleConcatenation(mixed $current, mixed $value): string
+    {
+        $currentStr = match (true) {
+            is_string($current) => $current,
+            is_numeric($current) => (string)$current,
+            $current === null => '',
+            is_bool($current) => $current ? 'true' : 'false',
+            is_array($current) => json_encode($current),
+            default => ''
+        };
+        
+        $valueStr = match (true) {
+            is_string($value) => $value,
+            is_numeric($value) => (string)$value,
+            $value === null => '',
+            is_bool($value) => $value ? 'true' : 'false',
+            is_array($value) => json_encode($value),
+            default => ''
+        };
+        
+        return $currentStr . $valueStr;
     }
 
     private function resolveValue(RuleContext $context): mixed

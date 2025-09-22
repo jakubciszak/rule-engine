@@ -29,7 +29,13 @@ final class FlatRuleAPI
         $context = self::createContext($contextData);
 
         $rules = array_map(
-            static fn(array $ruleData): RuleInterface => self::createRule($ruleData),
+            static function(mixed $ruleData): RuleInterface {
+                if (!is_array($ruleData)) {
+                    throw new InvalidArgumentException('Rule data must be an array');
+                }
+                /** @var array<string, mixed> $ruleData */
+                return self::createRule($ruleData);
+            },
             $rulesetData['rules']
         );
 
@@ -45,10 +51,29 @@ final class FlatRuleAPI
      */
     private static function createRule(array $data): RuleInterface
     {
-        $rule = new Rule($data['name'] ?? uniqid('rule_', true));
-        foreach ($data['elements'] ?? [] as $element) {
+        $name = $data['name'] ?? uniqid('rule_', true);
+        if (!is_string($name)) {
+            $name = uniqid('rule_', true);
+        }
+        
+        $rule = new Rule($name);
+        $elements = $data['elements'] ?? [];
+        if (!is_array($elements)) {
+            throw new InvalidArgumentException('Rule elements must be an array');
+        }
+        
+        foreach ($elements as $element) {
+            if (!is_array($element)) {
+                throw new InvalidArgumentException('Rule element must be an array');
+            }
+            
             $type = $element['type'] ?? null;
             $name = $element['name'] ?? null;
+            
+            if (!is_string($type) || !is_string($name)) {
+                throw new InvalidArgumentException('Rule element type and name must be strings');
+            }
+            
             if ($type === 'operator') {
                 $rule->addElement(Operator::create($name));
                 continue;
@@ -58,7 +83,11 @@ final class FlatRuleAPI
                 continue;
             }
             if ($type === 'proposition') {
-                $rule->addElement(Proposition::create($name, $element['value'] ?? true));
+                $value = $element['value'] ?? true;
+                if (!is_bool($value) && !($value instanceof \Closure)) {
+                    $value = true;
+                }
+                $rule->addElement(Proposition::create($name, $value));
                 continue;
             }
             throw new InvalidArgumentException('Invalid rule element');
@@ -67,7 +96,12 @@ final class FlatRuleAPI
 
         if (!empty($data['actions']) && is_array($data['actions'])) {
             $actions = array_map(
-                static fn(string $expr): Action => ActionParser::parse($expr),
+                static function(mixed $expr): Action {
+                    if (!is_string($expr)) {
+                        throw new InvalidArgumentException('Action expression must be a string');
+                    }
+                    return ActionParser::parse($expr);
+                },
                 $data['actions']
             );
 

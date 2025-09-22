@@ -63,6 +63,6 @@ final readonly class Proposition implements RuleElement, ValueElement
         if ($this->value instanceof Closure) {
             return call_user_func($this->value);
         }
-        return $this->value;
+        return $this->value ?? false;
     }
 }
