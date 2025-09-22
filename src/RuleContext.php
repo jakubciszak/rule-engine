@@ -36,6 +36,9 @@ class RuleContext
         return $newContext;
     }
 
+    /**
+     * @param array<string, RuleElement> $elements
+     */
     private function setElements(array $elements): void
     {
         $this->elements = $elements;

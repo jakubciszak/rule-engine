@@ -5,3 +5,6 @@ parameters:
     processTimeout: 300.0
   paths:
     - src/
+  ignoreErrors:
+    - message: '#Parameter &\$stack by-ref type .* expects array<.*RuleElement>, array given#'
+      path: src/Rule.php

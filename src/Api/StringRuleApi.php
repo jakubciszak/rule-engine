@@ -27,6 +27,10 @@ final class StringRuleApi
     {
     }
 
+    /**
+     * @param string|array<string, string> $expression
+     * @param array<string, mixed> $data
+     */
     public static function evaluate(string|array $expression, array $data = []): bool
     {
         $context = self::createContext($data);
@@ -36,9 +40,6 @@ final class StringRuleApi
                 array_keys($expression),
                 static function (array $rules, string $name) use ($expression, $data): array {
                     $expr = $expression[$name];
-                    if (!is_string($expr)) {
-                        throw new InvalidArgumentException('Invalid expression');
-                    }
                     $rule = new Rule($name);
                     self::parseExpression($expr, $rule, $data);
                     $rules[] = $rule;
@@ -57,6 +58,9 @@ final class StringRuleApi
         return $rule->evaluate($context)->getValue();
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function parseExpression(string $expression, Rule $rule, array $data): void
     {
         $tokens = self::tokenize($expression);
@@ -147,6 +151,9 @@ final class StringRuleApi
         return $stack[0] ?? [];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function handleToken(string $token, Rule $rule, array $data): void
     {
         $lower = strtolower($token);
@@ -181,10 +188,13 @@ final class StringRuleApi
         return $value;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function addVariable(string $path, Rule $rule, array $data): void
     {
         $value = self::extractVar($data, $path);
-        if (is_bool($value) || is_callable($value)) {
+        if (is_bool($value) || $value instanceof \Closure) {
             $rule->proposition($path, $value);
         } else {
             $rule->variable($path, $value);
@@ -197,6 +207,9 @@ final class StringRuleApi
         $rule->variable($name, $value);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function extractVar(array $data, string $path): mixed
     {
         return array_reduce(
@@ -206,6 +219,9 @@ final class StringRuleApi
         );
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function createContext(array $data): RuleContext
     {
         $context = new RuleContext();

@@ -15,6 +15,10 @@ final class NestedRuleApi
         // we want to prevent instantiation
     }
 
+    /**
+     * @param array<mixed> $rules
+     * @param array<string, mixed> $data
+     */
     public static function evaluate(array $rules, array &$data = []): bool
     {
         $flatData = self::flattenData($data);
@@ -56,6 +60,9 @@ final class NestedRuleApi
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function parseExpression(mixed $expr, Rule $rule, array $data): void
     {
         if (is_array($expr)) {
@@ -83,6 +90,10 @@ final class NestedRuleApi
         }
     }
 
+    /**
+     * @param array<mixed> $values
+     * @param array<string, mixed> $data
+     */
     private static function parseLogical(string $operator, array $values, Rule $rule, array $data): void
     {
         foreach ($values as $index => $value) {
@@ -93,12 +104,19 @@ final class NestedRuleApi
         }
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function parseNot(mixed $value, Rule $rule, array $data): void
     {
         self::parseExpression($value, $rule, $data);
         $rule->addElement(Operator::NOT);
     }
 
+    /**
+     * @param array<mixed> $values
+     * @param array<string, mixed> $data
+     */
     private static function parseComparison(string $operator, array $values, Rule $rule, array $data): void
     {
         self::parseExpression($values[1] ?? null, $rule, $data);
@@ -107,10 +125,13 @@ final class NestedRuleApi
         $rule->addElement(Operator::create($operator));
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function addVariable(string $path, Rule $rule, array $data): void
     {
         $value = self::extractVar($data, $path);
-        if (is_bool($value) || is_callable($value)) {
+        if (is_bool($value) || $value instanceof \Closure) {
             $rule->proposition($path, $value);
         } else {
             $rule->variable($path, $value);
@@ -123,6 +144,9 @@ final class NestedRuleApi
         $rule->variable($name, $value);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function extractVar(array $data, string $path): mixed
     {
         $parts = explode('.', $path);
@@ -139,6 +163,9 @@ final class NestedRuleApi
         return $value;
     }
 
+    /**
+     * @param array<mixed> $rules
+     */
     private static function isRulesetArray(array $rules): bool
     {
         if (empty($rules)) {
@@ -154,6 +181,7 @@ final class NestedRuleApi
     }
 
     /**
+     * @param array<mixed> $definition
      * @return string[]
      */
     private static function extractActions(array &$definition): array
@@ -187,6 +215,9 @@ final class NestedRuleApi
         return new ActivityRule($rule, $activity);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private static function createContext(array $data): RuleContext
     {
         $context = new RuleContext();
@@ -204,6 +235,8 @@ final class NestedRuleApi
     /**
      * Flatten nested array data to dotted notation
      * Cognitive Complexity reduced: no nested ifs, no deep nesting, single recursion point
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     private static function flattenData(array $data, string $prefix = ''): array
     {
@@ -228,6 +261,9 @@ final class NestedRuleApi
 
     /**
      * Expand wildcard patterns in rules
+     * @param array<mixed> $rules
+     * @param array<string, mixed> $flatData
+     * @return array<mixed>
      */
     private static function expandWildcards(array $rules, array $flatData): array
     {
@@ -274,6 +310,8 @@ final class NestedRuleApi
 
     /**
      * Find keys in flat data that match a wildcard pattern
+     * @param array<string, mixed> $flatData
+     * @return array<string>
      */
     private static function findMatchingKeys(string $wildcardPath, array $flatData): array
     {
@@ -293,6 +331,9 @@ final class NestedRuleApi
     /**
      * Expand a rule structure to handle multiple concrete paths instead of wildcard
      * Cognitive Complexity reduced: helper for expanding operands, early returns, no deep nesting
+     * @param array<mixed> $rules
+     * @param array<string> $concreteKeys
+     * @return array<mixed>
      */
     private static function expandRuleForPath(array $rules, string $wildcardPath, array $concreteKeys): array
     {
@@ -310,6 +351,9 @@ final class NestedRuleApi
 
     /**
      * Helper to expand operands for logical operators
+     * @param array<mixed> $operands
+     * @param array<string> $concreteKeys
+     * @return array<mixed>
      */
     private static function expandOperands(array $operands, string $wildcardPath, array $concreteKeys): array
     {
@@ -328,6 +372,7 @@ final class NestedRuleApi
 
     /**
      * Check if an operand contains a specific wildcard path
+     * @param array<mixed> $operand
      */
     private static function containsWildcardPath(array $operand, string $wildcardPath): bool
     {
@@ -341,6 +386,7 @@ final class NestedRuleApi
 
     /**
      * Recursively search for wildcard path in nested arrays
+     * @param array<mixed> $data
      */
     private static function containsWildcardPathRecursive(array $data, string $wildcardPath): bool
     {
@@ -361,6 +407,8 @@ final class NestedRuleApi
 
     /**
      * Replace wildcard path with concrete path in an operand
+     * @param array<mixed> $operand
+     * @return array<mixed>
      */
     private static function replaceWildcardInOperand(array $operand, string $wildcardPath, string $concreteKey): array
     {
@@ -372,6 +420,8 @@ final class NestedRuleApi
 
     /**
      * Recursively replace wildcard paths in nested arrays
+     * @param array<mixed> $data
+     * @return array<mixed>
      */
     private static function replaceWildcardRecursive(array $data, string $wildcardPath, string $concreteKey): array
     {
