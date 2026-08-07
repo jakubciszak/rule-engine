@@ -65,6 +65,8 @@ The examples showcase all three Rule Engine APIs:
 - **FlatRuleAPI**: For performance-critical rule evaluation
 - **ExpressionRuleApi**: For human-readable rule expressions
 
+Each API returns an `EvaluationResult` object exposing the boolean decision and the updated context.
+
 ## Business Context
 
 These examples simulate a real financial institution's KYC onboarding process, including:

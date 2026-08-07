@@ -39,7 +39,7 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertFalse($result);
+        $this->assertFalse($result->getResult());
     }
 
     public function testEvaluateFlatRuleAPIsWithActions(): void
@@ -77,8 +77,9 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result);
-        $this->assertSame(1, $context['count']);
+        $this->assertTrue($result->getResult());
+        $this->assertSame(0, $context['count']);
+        $this->assertSame(1, $result->getContext()['count']);
     }
 
     public function testActionUsingVariableReference(): void
@@ -117,8 +118,9 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result);
-        $this->assertSame(3, $context['count']);
+        $this->assertTrue($result->getResult());
+        $this->assertSame(1, $context['count']);
+        $this->assertSame(3, $result->getContext()['count']);
     }
 
     public function testActionSubtract(): void
@@ -156,8 +158,9 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result);
-        $this->assertSame(8, $context['count']);
+        $this->assertTrue($result->getResult());
+        $this->assertSame(10, $context['count']);
+        $this->assertSame(8, $result->getContext()['count']);
     }
 
     public function testActionConcatenate(): void
@@ -194,8 +197,9 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        //$this->assertTrue($result);
-        $this->assertSame('JohnDoe', $context['name']);
+        $this->assertTrue($result->getResult());
+        $this->assertSame('John', $context['name']);
+        $this->assertSame('JohnDoe', $result->getContext()['name']);
     }
 
     public function testActionSet(): void
@@ -233,8 +237,9 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result);
-        $this->assertSame('done', $context['status']);
+        $this->assertTrue($result->getResult());
+        $this->assertSame('pending', $context['status']);
+        $this->assertSame('done', $result->getContext()['status']);
     }
 
     public function testCallablePropositionInContext(): void
@@ -254,7 +259,7 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result);
+        $this->assertTrue($result->getResult());
     }
 
     public function testActionInitializesMissingVariable(): void
@@ -288,7 +293,8 @@ final class FlatRuleAPITest extends TestCase
 
         $result = FlatRuleAPI::evaluate($rules, $context);
 
-        $this->assertTrue($result);
-        $this->assertSame(1, $context['generated']);
+        $this->assertTrue($result->getResult());
+        $this->assertArrayNotHasKey('generated', $context);
+        $this->assertSame(1, $result->getContext()['generated']);
     }
 }

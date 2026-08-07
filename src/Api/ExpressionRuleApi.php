@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace JakubCiszak\RuleEngine\Api;
 
 use InvalidArgumentException;
-use JakubCiszak\RuleEngine\{Action, RuleContext};
+use JakubCiszak\RuleEngine\{Action, EvaluationResult, RuleContext};
 use JakubCiszak\RuleEngine\Expression\RuleExpressionLanguage;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use UnexpectedValueException;
@@ -22,14 +22,13 @@ final class ExpressionRuleApi
      * @param string|array<string, string> $expression
      * @param array<string, mixed> $data
      * @param list<string> $actions
-     * @param-out array<string, mixed> $data
      */
     public static function evaluate(
         string|array $expression,
-        array &$data = [],
+        array $data = [],
         ?ExpressionLanguage $language = null,
         array $actions = [],
-    ): bool {
+    ): EvaluationResult {
         $context = self::prepareContext($data);
         $language ??= self::defaultLanguage();
         $parsedActions = self::parseActions($actions);
@@ -48,10 +47,10 @@ final class ExpressionRuleApi
         }
 
         if ($result) {
-            self::executeActions($parsedActions, $data);
+            $data = self::executeActions($parsedActions, $data);
         }
 
-        return $result;
+        return new EvaluationResult($result, $data);
     }
 
     /**
@@ -134,12 +133,12 @@ final class ExpressionRuleApi
     /**
      * @param list<Action> $actions
      * @param array<string, mixed> $data
-     * @param-out array<string, mixed> $data
+     * @return array<string, mixed>
      */
-    private static function executeActions(array $actions, array &$data): void
+    private static function executeActions(array $actions, array $data): array
     {
         if ($actions === []) {
-            return;
+            return $data;
         }
 
         $context = new RuleContext();
@@ -151,7 +150,7 @@ final class ExpressionRuleApi
             $action->execute($context);
         }
 
-        $data = $context->toArray();
+        return $context->toArray();
     }
 
     /**

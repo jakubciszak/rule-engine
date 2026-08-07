@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace JakubCiszak\RuleEngine\Api;
 
 use InvalidArgumentException;
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition, Action, ActivityRule, RuleInterface, Ruleset};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Variable, Proposition, Action, ActivityRule, RuleInterface, Ruleset, EvaluationResult};
 use JakubCiszak\RuleEngine\Api\ActionParser;
 
 final class FlatRuleAPI
@@ -18,9 +18,8 @@ final class FlatRuleAPI
     /**
      * @param array<string, mixed> $rulesetData
      * @param array<string, mixed> $contextData
-     * @param-out array<string, mixed> $contextData
      */
-    public static function evaluate(array $rulesetData, array &$contextData = []): bool
+    public static function evaluate(array $rulesetData, array $contextData = []): EvaluationResult
     {
         if (!isset($rulesetData['rules']) || !is_array($rulesetData['rules'])) {
             throw new InvalidArgumentException('Invalid rules data');
@@ -38,12 +37,11 @@ final class FlatRuleAPI
             },
             $rulesetData['rules']
         );
-
         $ruleset = new Ruleset(...$rules);
-
+        $ruleset = new Ruleset(...$rules);
         $result = $ruleset->evaluate($context)->getValue();
-        $contextData = $context->toArray();
-        return $result;
+        $result = $ruleset->evaluate($context)->getValue();
+        return new EvaluationResult($result, $context->toArray());
     }
 
     /**

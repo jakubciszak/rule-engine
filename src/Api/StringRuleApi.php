@@ -2,7 +2,7 @@
 
 namespace JakubCiszak\RuleEngine\Api;
 
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset, EvaluationResult};
 use InvalidArgumentException;
 
 /**
@@ -34,7 +34,7 @@ final class StringRuleApi
      * @param string|array<string, string> $expression
      * @param array<string, mixed> $data
      */
-    public static function evaluate(string|array $expression, array $data = []): bool
+    public static function evaluate(string|array $expression, array $data = []): EvaluationResult
     {
         $context = self::createContext($data);
 
@@ -52,13 +52,13 @@ final class StringRuleApi
                 []
             );
 
-            return (new Ruleset(...$rules))->evaluate($context)->getValue();
+            return new EvaluationResult((new Ruleset(...$rules))->evaluate($context)->getValue(), $context->toArray());
         }
 
         $rule = new Rule('string_rule');
         self::parseExpression($expression, $rule, $data);
 
-        return $rule->evaluate($context)->getValue();
+        return new EvaluationResult($rule->evaluate($context)->getValue(), $context->toArray());
     }
 
     /**
