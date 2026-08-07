@@ -13,8 +13,8 @@ final class StringRuleApiTest extends TestCase
         $data = ['a' => 2, 'b' => 2];
 
         $result = StringRuleApi::evaluate($expr, $data);
-        self::assertTrue($result->getResult());
-        self::assertSame($data, $result->getContext());
+        self::assertTrue($result->result);
+        self::assertSame($data, $result->context);
     }
 
     public function testEvaluateNestedExpression(): void
@@ -22,7 +22,7 @@ final class StringRuleApiTest extends TestCase
         $expr = '(.actualAge > 18 or .name is Adam) or (.citizenship is PL and .actualAge > 15)';
         $data = ['actualAge' => 16, 'name' => 'John', 'citizenship' => 'PL'];
 
-        self::assertTrue(StringRuleApi::evaluate($expr, $data)->getResult());
+        self::assertTrue(StringRuleApi::evaluate($expr, $data)->result);
     }
 
     public function testEvaluateNotOperator(): void
@@ -30,7 +30,7 @@ final class StringRuleApiTest extends TestCase
         $expr = '.a is 1 and not (.b < 2)';
         $data = ['a' => 1, 'b' => 3];
 
-        self::assertTrue(StringRuleApi::evaluate($expr, $data)->getResult());
+        self::assertTrue(StringRuleApi::evaluate($expr, $data)->result);
     }
 
     public function testEvaluateRuleset(): void
@@ -41,8 +41,8 @@ final class StringRuleApiTest extends TestCase
         ];
         $data = ['age' => 20, 'name' => 'John'];
 
-        self::assertTrue(StringRuleApi::evaluate($expressions, $data)->getResult());
-        self::assertFalse(StringRuleApi::evaluate($expressions, ['age' => 20, 'name' => 'Jane'])->getResult());
+        self::assertTrue(StringRuleApi::evaluate($expressions, $data)->result);
+        self::assertFalse(StringRuleApi::evaluate($expressions, ['age' => 20, 'name' => 'Jane'])->result);
     }
 
     public function testEvaluateDeeplyNestedExpression(): void
@@ -59,7 +59,7 @@ final class StringRuleApiTest extends TestCase
             'h' => true,
         ];
 
-        self::assertTrue(StringRuleApi::evaluate($expr, $data)->getResult());
+        self::assertTrue(StringRuleApi::evaluate($expr, $data)->result);
     }
 
     public function testEvaluateVeryComplexExpression(): void
@@ -79,7 +79,7 @@ final class StringRuleApiTest extends TestCase
             'k' => true,
         ];
 
-        self::assertFalse(StringRuleApi::evaluate($expr, $data)->getResult());
+        self::assertFalse(StringRuleApi::evaluate($expr, $data)->result);
     }
 
     public function testEvaluateBooleanVariablesWithoutExplicitComparison(): void
@@ -87,8 +87,8 @@ final class StringRuleApiTest extends TestCase
         $expr = '.g and .x';
         $data = ['g' => true, 'x' => true];
 
-        self::assertTrue(StringRuleApi::evaluate($expr, $data)->getResult());
-        self::assertFalse(StringRuleApi::evaluate($expr, ['g' => true, 'x' => false])->getResult());
+        self::assertTrue(StringRuleApi::evaluate($expr, $data)->result);
+        self::assertFalse(StringRuleApi::evaluate($expr, ['g' => true, 'x' => false])->result);
     }
 
     public function testEvaluateNotOnBooleanVariable(): void
@@ -96,7 +96,7 @@ final class StringRuleApiTest extends TestCase
         $expr = 'not .g';
         $data = ['g' => false];
 
-        self::assertTrue(StringRuleApi::evaluate($expr, $data)->getResult());
-        self::assertFalse(StringRuleApi::evaluate($expr, ['g' => true])->getResult());
+        self::assertTrue(StringRuleApi::evaluate($expr, $data)->result);
+        self::assertFalse(StringRuleApi::evaluate($expr, ['g' => true])->result);
     }
 }

@@ -16,7 +16,7 @@ final class NestedRuleApiTest extends TestCase
 
         $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testEvaluateJsonStrings(): void
@@ -34,7 +34,7 @@ final class NestedRuleApiTest extends TestCase
             NestedRuleApi::evaluate(
                 $decodedRules,
                 $decodedData
-            )->getResult()
+            )->result
         );
     }
 
@@ -47,7 +47,7 @@ final class NestedRuleApiTest extends TestCase
 
         $data = ['a' => 0, 'b' => 3];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testEvaluateNotOperator(): void
@@ -58,7 +58,7 @@ final class NestedRuleApiTest extends TestCase
 
         $data = ['a' => 3];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testEvaluateAllComparisonOperators(): void
@@ -81,7 +81,7 @@ final class NestedRuleApiTest extends TestCase
             'f' => 2,
         ];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testEvaluateRulesetArray(): void
@@ -99,7 +99,7 @@ final class NestedRuleApiTest extends TestCase
 
         $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
 
-        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($ruleset, $data)->result);
     }
 
     public function testEvaluateRulesetJson(): void
@@ -120,7 +120,7 @@ final class NestedRuleApiTest extends TestCase
             NestedRuleApi::evaluate(
                 $decodedRuleset,
                 $decodedData
-            )->getResult()
+            )->result
         );
     }
 
@@ -139,9 +139,9 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1, 'count' => 0];
 
         $result = NestedRuleApi::evaluate($ruleset, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
         self::assertSame(0, $data['count']);
-        self::assertSame(1, $result->getContext()['count']);
+        self::assertSame(1, $result->context['count']);
     }
 
     public function testActionUsingVariableReference(): void
@@ -159,9 +159,9 @@ final class NestedRuleApiTest extends TestCase
         $data = ['x' => 1, 'count' => 1, 'increment' => 2];
 
         $result = NestedRuleApi::evaluate($ruleset, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
         self::assertSame(1, $data['count']);
-        self::assertSame(3, $result->getContext()['count']);
+        self::assertSame(3, $result->context['count']);
     }
 
     public function testActionSubtract(): void
@@ -179,9 +179,9 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1, 'count' => 10];
 
         $result = NestedRuleApi::evaluate($ruleset, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
         self::assertSame(10, $data['count']);
-        self::assertSame(8, $result->getContext()['count']);
+        self::assertSame(8, $result->context['count']);
     }
 
     public function testActionConcatenate(): void
@@ -199,9 +199,9 @@ final class NestedRuleApiTest extends TestCase
         $data = ['name' => 'John'];
 
         $result = NestedRuleApi::evaluate($ruleset, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
         self::assertSame('John', $data['name']);
-        self::assertSame('JohnDoe', $result->getContext()['name']);
+        self::assertSame('JohnDoe', $result->context['name']);
     }
 
     public function testActionSet(): void
@@ -219,9 +219,9 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1, 'status' => 'pending'];
 
         $result = NestedRuleApi::evaluate($ruleset, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
         self::assertSame('pending', $data['status']);
-        self::assertSame('done', $result->getContext()['status']);
+        self::assertSame('done', $result->context['status']);
     }
 
     public function testCallableProposition(): void
@@ -232,7 +232,7 @@ final class NestedRuleApiTest extends TestCase
 
         $data = ['check' => fn () => true];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testActionInitializesMissingVariable(): void
@@ -250,9 +250,9 @@ final class NestedRuleApiTest extends TestCase
         $data = ['a' => 1];
 
         $result = NestedRuleApi::evaluate($ruleset, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
         self::assertArrayNotHasKey('generated', $data);
-        self::assertSame(1, $result->getContext()['generated']);
+        self::assertSame(1, $result->context['generated']);
     }
 
     public function testWildcardExpansion(): void
@@ -275,16 +275,16 @@ final class NestedRuleApiTest extends TestCase
         // This should expand to check addresses.0.street, addresses.1.street, addresses.2.street
         // The rule should fail because addresses.1.street is empty
         $result = NestedRuleApi::evaluate($rules, $data);
-        self::assertFalse($result->getResult());
+        self::assertFalse($result->result);
         
         // Verify the context was flattened and contains the expanded keys
         self::assertArrayNotHasKey('addresses.0.street', $data);
-        self::assertArrayHasKey('addresses.0.street', $result->getContext());
-        self::assertArrayHasKey('addresses.1.street', $result->getContext());
-        self::assertArrayHasKey('addresses.2.street', $result->getContext());
-        self::assertSame('Długa 1', $result->getContext()['addresses.0.street']);
-        self::assertSame('', $result->getContext()['addresses.1.street']);
-        self::assertSame('Ogrodowa 7', $result->getContext()['addresses.2.street']);
+        self::assertArrayHasKey('addresses.0.street', $result->context);
+        self::assertArrayHasKey('addresses.1.street', $result->context);
+        self::assertArrayHasKey('addresses.2.street', $result->context);
+        self::assertSame('Długa 1', $result->context['addresses.0.street']);
+        self::assertSame('', $result->context['addresses.1.street']);
+        self::assertSame('Ogrodowa 7', $result->context['addresses.2.street']);
     }
 
     public function testWildcardWithOperators(): void
@@ -306,7 +306,7 @@ final class NestedRuleApiTest extends TestCase
 
         // This should expand to check all addresses
         // Should fail because Kraków is not in ['Warsaw', 'Gdańsk']
-        self::assertFalse(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertFalse(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testWildcardSuccess(): void
@@ -325,7 +325,7 @@ final class NestedRuleApiTest extends TestCase
             ]
         ];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testWildcardWithEmptyArray(): void
@@ -342,7 +342,7 @@ final class NestedRuleApiTest extends TestCase
         ];
 
         // Should return true when array is empty (vacuous truth)
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testWildcardWithNonArrayValue(): void
@@ -359,7 +359,7 @@ final class NestedRuleApiTest extends TestCase
         ];
 
         // Should return true when no wildcard matches found (vacuous truth)
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testMultipleWildcards(): void
@@ -379,7 +379,7 @@ final class NestedRuleApiTest extends TestCase
             ]
         ];
 
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data)->result);
     }
 
     public function testNestedWildcards(): void
@@ -410,16 +410,16 @@ final class NestedRuleApiTest extends TestCase
         ];
 
         $result = NestedRuleApi::evaluate($rules, $data);
-        self::assertTrue($result->getResult());
+        self::assertTrue($result->result);
 
         // Verify flattened structure
         self::assertArrayNotHasKey('departments.0.employees.0.name', $data);
-        self::assertArrayHasKey('departments.0.employees.0.name', $result->getContext());
-        self::assertArrayHasKey('departments.0.employees.1.name', $result->getContext());
-        self::assertArrayHasKey('departments.1.employees.0.name', $result->getContext());
-        self::assertSame('Alice', $result->getContext()['departments.0.employees.0.name']);
-        self::assertSame('Bob', $result->getContext()['departments.0.employees.1.name']);
-        self::assertSame('Charlie', $result->getContext()['departments.1.employees.0.name']);
+        self::assertArrayHasKey('departments.0.employees.0.name', $result->context);
+        self::assertArrayHasKey('departments.0.employees.1.name', $result->context);
+        self::assertArrayHasKey('departments.1.employees.0.name', $result->context);
+        self::assertSame('Alice', $result->context['departments.0.employees.0.name']);
+        self::assertSame('Bob', $result->context['departments.0.employees.1.name']);
+        self::assertSame('Charlie', $result->context['departments.1.employees.0.name']);
     }
 
     public function testWildcardExampleFromIssue(): void
@@ -439,7 +439,7 @@ final class NestedRuleApiTest extends TestCase
         ];
 
         // Should fail because Kraków is not in ['Warsaw', 'Gdańsk']
-        self::assertFalse(NestedRuleApi::evaluate($rules, $data)->getResult());
+        self::assertFalse(NestedRuleApi::evaluate($rules, $data)->result);
         
         // Test success case
         $data2 = [
@@ -450,6 +450,6 @@ final class NestedRuleApiTest extends TestCase
         ];
 
         // Should pass because both Warsaw and Gdańsk are in the allowed list
-        self::assertTrue(NestedRuleApi::evaluate($rules, $data2)->getResult());
+        self::assertTrue(NestedRuleApi::evaluate($rules, $data2)->result);
     }
 }
