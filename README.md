@@ -133,8 +133,31 @@ $rules = [
     'adult' => 'actualAge >= 18',
     'plCitizen' => 'citizenship === "PL"',
 ];
+$data = ['actualAge' => 20, 'citizenship' => 'PL'];
 
-ExpressionRuleApi::evaluate($rules, ['actualAge' => 20, 'citizenship' => 'PL']); // true
+ExpressionRuleApi::evaluate($rules, $data); // true
+```
+
+Actions use the existing rule action syntax and update the context passed by reference. They are parsed before evaluation and executed once only when the complete expression or named ruleset returns `true`:
+
+```php
+$data = [
+    'actualAge' => 20,
+    'status' => 'pending',
+    'score' => 0,
+];
+
+ExpressionRuleApi::evaluate(
+    expression: 'actualAge >= 18',
+    data: $data,
+    actions: [
+        '.status = approved',
+        '.score + 10',
+    ],
+); // true
+
+// $data['status'] === 'approved'
+// $data['score'] === 10
 ```
 
 Expressions can be checked before they are stored or executed:
@@ -209,7 +232,7 @@ Each rule may include simple actions executed when the rule is evaluated. Action
 
 Supported operators are `+` (addition), `-` (subtraction), `.` (concatenation) and `=` (assignment). Values starting with `.` reference variables from the evaluation context.
 
-When using `NestedRuleApi`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset.
+When using `NestedRuleApi`, specify actions under the `actions` key alongside the rule expression or within each rule of a ruleset. `ExpressionRuleApi` accepts them through its named `actions` argument, as shown above.
 
 #### FlatRuleAPI example
 

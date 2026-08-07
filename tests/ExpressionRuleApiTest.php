@@ -32,15 +32,17 @@ final class ExpressionRuleApiTest extends TestCase
             'adult' => 'age >= 18',
             'active' => 'status === "active"',
         ];
-
-        self::assertTrue(ExpressionRuleApi::evaluate($expressions, [
+        $activeAdult = [
             'age' => 20,
             'status' => 'active',
-        ]));
-        self::assertFalse(ExpressionRuleApi::evaluate($expressions, [
+        ];
+        $blockedAdult = [
             'age' => 20,
             'status' => 'blocked',
-        ]));
+        ];
+
+        self::assertTrue(ExpressionRuleApi::evaluate($expressions, $activeAdult));
+        self::assertFalse(ExpressionRuleApi::evaluate($expressions, $blockedAdult));
     }
 
     public function testEmptyRulesetUsesVacuousTruth(): void
@@ -51,11 +53,12 @@ final class ExpressionRuleApiTest extends TestCase
     public function testSupportsQuotedStringsAndNotEqualOperator(): void
     {
         $expression = 'name === "John Doe" and status != "blocked"';
-
-        self::assertTrue(ExpressionRuleApi::evaluate($expression, [
+        $data = [
             'name' => 'John Doe',
             'status' => 'active',
-        ]));
+        ];
+
+        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data));
     }
 
     public function testSupportsNestedArraysAndStrictMembership(): void
@@ -73,16 +76,20 @@ final class ExpressionRuleApiTest extends TestCase
 
     public function testKeepsStrictComparisonExplicit(): void
     {
-        self::assertFalse(ExpressionRuleApi::evaluate('value === 1', ['value' => '1']));
-        self::assertTrue(ExpressionRuleApi::evaluate('value == 1', ['value' => '1']));
+        $strictData = ['value' => '1'];
+        $looseData = ['value' => '1'];
+
+        self::assertFalse(ExpressionRuleApi::evaluate('value === 1', $strictData));
+        self::assertTrue(ExpressionRuleApi::evaluate('value == 1', $looseData));
     }
 
     public function testRejectsExpressionReturningNonBooleanValue(): void
     {
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('must evaluate to bool, int returned');
+        $data = ['amount' => 10];
 
-        ExpressionRuleApi::evaluate('amount + 1', ['amount' => 10]);
+        ExpressionRuleApi::evaluate('amount + 1', $data);
     }
 
     public function testLintRejectsUnknownVariables(): void
@@ -103,16 +110,19 @@ final class ExpressionRuleApiTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('must be scalar, null or array');
+        $data = ['customer' => new \stdClass()];
 
-        ExpressionRuleApi::evaluate('customer != null', ['customer' => new \stdClass()]);
+        ExpressionRuleApi::evaluate('customer != null', $data);
     }
 
     public function testIgnoresTopLevelKeysThatCannotBeExpressionVariables(): void
     {
-        self::assertTrue(ExpressionRuleApi::evaluate('score === 123', [
+        $data = [
             'conditions.0' => 'manual_review',
             'score' => 123,
-        ]));
+        ];
+
+        self::assertTrue(ExpressionRuleApi::evaluate('score === 123', $data));
     }
 
     public function testAllowsExplicitlyRegisteredFunctions(): void
@@ -124,11 +134,106 @@ final class ExpressionRuleApiTest extends TestCase
             }
         };
         $language = new RuleExpressionLanguage(null, [$provider]);
+        $data = ['name' => 'Jakub'];
 
         self::assertTrue(ExpressionRuleApi::evaluate(
             'length(name) > 3',
-            ['name' => 'Jakub'],
+            $data,
             $language,
         ));
+    }
+
+    public function testExecutesActionsWhenExpressionMatches(): void
+    {
+        $data = [
+            'eligible' => true,
+            'count' => 0,
+            'status' => 'pending',
+        ];
+
+        $result = ExpressionRuleApi::evaluate(
+            expression: 'eligible',
+            data: $data,
+            actions: [
+                '.count + 1',
+                '.status = approved',
+            ],
+        );
+
+        self::assertTrue($result);
+        self::assertSame(1, $data['count']);
+        self::assertSame('approved', $data['status']);
+    }
+
+    public function testDoesNotExecuteActionsWhenExpressionDoesNotMatch(): void
+    {
+        $data = [
+            'eligible' => false,
+            'count' => 0,
+        ];
+
+        $result = ExpressionRuleApi::evaluate(
+            expression: 'eligible',
+            data: $data,
+            actions: ['.count + 1'],
+        );
+
+        self::assertFalse($result);
+        self::assertSame(0, $data['count']);
+    }
+
+    public function testExecutesActionsOnceAfterEntireNamedRulesetMatches(): void
+    {
+        $data = [
+            'age' => 20,
+            'status' => 'active',
+            'count' => 0,
+        ];
+
+        $result = ExpressionRuleApi::evaluate(
+            expression: [
+                'adult' => 'age >= 18',
+                'active' => 'status === "active"',
+            ],
+            data: $data,
+            actions: ['.count + 1'],
+        );
+
+        self::assertTrue($result);
+        self::assertSame(1, $data['count']);
+    }
+
+    public function testActionsCanReferenceContextAndEarlierActionResults(): void
+    {
+        $data = [
+            'eligible' => true,
+            'count' => 1,
+            'increment' => 2,
+        ];
+
+        ExpressionRuleApi::evaluate(
+            expression: 'eligible',
+            data: $data,
+            actions: [
+                '.count + .increment',
+                '.total + .count',
+            ],
+        );
+
+        self::assertSame(3, $data['count']);
+        self::assertSame(3, $data['total']);
+    }
+
+    public function testValidatesActionsBeforeEvaluatingExpression(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Action target must be a variable');
+        $data = ['eligible' => false];
+
+        ExpressionRuleApi::evaluate(
+            expression: 'eligible',
+            data: $data,
+            actions: ['count + 1'],
+        );
     }
 }

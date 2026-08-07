@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JakubCiszak\RuleEngine\Api;
 
 use InvalidArgumentException;
+use JakubCiszak\RuleEngine\{Action, RuleContext};
 use JakubCiszak\RuleEngine\Expression\RuleExpressionLanguage;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use UnexpectedValueException;
@@ -20,26 +21,34 @@ final class ExpressionRuleApi
     /**
      * @param string|array<string, string> $expression
      * @param array<string, mixed> $data
+     * @param list<string> $actions
+     * @param-out array<string, mixed> $data
      */
     public static function evaluate(
         string|array $expression,
-        array $data = [],
+        array &$data = [],
         ?ExpressionLanguage $language = null,
+        array $actions = [],
     ): bool {
         $context = self::prepareContext($data);
         $language ??= self::defaultLanguage();
+        $parsedActions = self::parseActions($actions);
 
         if (is_string($expression)) {
-            return self::evaluateExpression($expression, $context, $language);
+            $result = self::evaluateExpression($expression, $context, $language);
+        } else {
+            $result = true;
+            foreach ($expression as $name => $ruleExpression) {
+                self::assertNamedExpression($name, $ruleExpression);
+
+                if (!self::evaluateExpression($ruleExpression, $context, $language, $name)) {
+                    $result = false;
+                }
+            }
         }
 
-        $result = true;
-        foreach ($expression as $name => $ruleExpression) {
-            self::assertNamedExpression($name, $ruleExpression);
-
-            if (!self::evaluateExpression($ruleExpression, $context, $language, $name)) {
-                $result = false;
-            }
+        if ($result) {
+            self::executeActions($parsedActions, $data);
         }
 
         return $result;
@@ -48,15 +57,18 @@ final class ExpressionRuleApi
     /**
      * @param string|array<string, string> $expression
      * @param array<string, mixed> $data
+     * @param list<string> $actions
      */
     public static function lint(
         string|array $expression,
         array $data = [],
         ?ExpressionLanguage $language = null,
+        array $actions = [],
     ): void {
         $context = self::prepareContext($data);
         $language ??= self::defaultLanguage();
         $variableNames = array_keys($context);
+        self::parseActions($actions);
 
         if (is_string($expression)) {
             $language->lint($expression, $variableNames);
@@ -98,6 +110,48 @@ final class ExpressionRuleApi
         if (!is_string($name) || !is_string($expression)) {
             throw new InvalidArgumentException('Named expressions must use string names and string expressions.');
         }
+    }
+
+    /**
+     * @param array<mixed> $actions
+     * @return list<Action>
+     */
+    private static function parseActions(array $actions): array
+    {
+        $parsed = [];
+
+        foreach ($actions as $action) {
+            if (!is_string($action)) {
+                throw new InvalidArgumentException('Action expression must be a string.');
+            }
+
+            $parsed[] = ActionParser::parse($action);
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * @param list<Action> $actions
+     * @param array<string, mixed> $data
+     * @param-out array<string, mixed> $data
+     */
+    private static function executeActions(array $actions, array &$data): void
+    {
+        if ($actions === []) {
+            return;
+        }
+
+        $context = new RuleContext();
+        foreach ($data as $name => $value) {
+            $context->variable($name, $value);
+        }
+
+        foreach ($actions as $action) {
+            $action->execute($context);
+        }
+
+        $data = $context->toArray();
     }
 
     /**
