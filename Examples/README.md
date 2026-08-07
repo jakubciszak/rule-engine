@@ -63,7 +63,7 @@ The examples showcase all three Rule Engine APIs:
 
 - **NestedRuleApi**: For complex business logic with nested conditions
 - **FlatRuleAPI**: For performance-critical rule evaluation
-- **StringRuleApi**: For human-readable rule expressions
+- **ExpressionRuleApi**: For human-readable rule expressions
 
 ## Business Context
 

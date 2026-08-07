@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use JakubCiszak\RuleEngine\Api\NestedRuleApi;
 use JakubCiszak\RuleEngine\Api\FlatRuleAPI;
-use JakubCiszak\RuleEngine\Api\StringRuleApi;
+use JakubCiszak\RuleEngine\Api\ExpressionRuleApi;
 
 echo "=== KYC Sanctions and Compliance Screening Example ===\n\n";
 
@@ -144,20 +144,20 @@ function ofacSanctionsScreening(array &$customer): bool
 }
 
 /**
- * Example 2: Multi-jurisdiction Sanctions Screening using StringRuleApi
+ * Example 2: Multi-jurisdiction Sanctions Screening using ExpressionRuleApi
  * Screening against EU, UN, and other international sanctions lists
  */
 function multiJurisdictionScreening(array &$customer): bool
 {
     $rules = [
-        'eu_sanctions_hit' => "eu_sanctions_result == 'exact_match' or eu_sanctions_result == 'potential_match'",
-        'un_sanctions_hit' => "un_sanctions_result == 'exact_match' or un_sanctions_result == 'potential_match'",
-        'multiple_sanctions_hits' => "ofac_screening_result == 'potential_match' and eu_sanctions_result == 'potential_match'"
+        'eu_sanctions_hit' => "eu_sanctions_result === 'exact_match' or eu_sanctions_result === 'potential_match'",
+        'un_sanctions_hit' => "un_sanctions_result === 'exact_match' or un_sanctions_result === 'potential_match'",
+        'multiple_sanctions_hits' => "ofac_screening_result === 'potential_match' and eu_sanctions_result === 'potential_match'"
     ];
 
     $result = false;
     
-    if (StringRuleApi::evaluate($rules['eu_sanctions_hit'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['eu_sanctions_hit'], $customer)) {
         $customer['compliance_score'] += 60;
         $customer['requires_manual_review'] = true;
         $customer['sanctions_alerts'][] = 'EU_SANCTIONS_HIT';
@@ -165,7 +165,7 @@ function multiJurisdictionScreening(array &$customer): bool
         $result = true;
     }
     
-    if (StringRuleApi::evaluate($rules['un_sanctions_hit'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['un_sanctions_hit'], $customer)) {
         $customer['compliance_score'] += 70;
         $customer['requires_manual_review'] = true;
         $customer['sanctions_alerts'][] = 'UN_SANCTIONS_HIT';
@@ -173,7 +173,7 @@ function multiJurisdictionScreening(array &$customer): bool
         $result = true;
     }
     
-    if (StringRuleApi::evaluate($rules['multiple_sanctions_hits'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['multiple_sanctions_hits'], $customer)) {
         $customer['compliance_score'] += 30;
         $customer['compliance_status'] = 'high_risk';
         $customer['sanctions_alerts'][] = 'MULTIPLE_SANCTIONS_HITS';
@@ -285,7 +285,7 @@ function geographicComplianceRisk(array &$customer): bool
 }
 
 /**
- * Example 5: Adverse Media and Reputation Risk using StringRuleApi
+ * Example 5: Adverse Media and Reputation Risk using ExpressionRuleApi
  * Screening for negative media coverage and reputational risks
  */
 function adverseMediaScreening(array &$customer): bool
@@ -298,18 +298,18 @@ function adverseMediaScreening(array &$customer): bool
 
     $result = false;
     
-    if (StringRuleApi::evaluate($rules['high_adverse_media'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['high_adverse_media'], $customer)) {
         $customer['compliance_score'] += 30;
         $customer['requires_manual_review'] = true;
         $customer['compliance_alerts'][] = 'HIGH_ADVERSE_MEDIA';
         echo "  → High adverse media coverage detected (+30 compliance points)\n";
         $result = true;
-    } elseif (StringRuleApi::evaluate($rules['medium_adverse_media'], $customer)) {
+    } elseif (ExpressionRuleApi::evaluate($rules['medium_adverse_media'], $customer)) {
         $customer['compliance_score'] += 15;
         $customer['compliance_alerts'][] = 'MEDIUM_ADVERSE_MEDIA';
         echo "  → Medium adverse media coverage detected (+15 compliance points)\n";
         $result = true;
-    } elseif (StringRuleApi::evaluate($rules['low_adverse_media'], $customer)) {
+    } elseif (ExpressionRuleApi::evaluate($rules['low_adverse_media'], $customer)) {
         $customer['compliance_score'] += 5;
         $customer['compliance_alerts'][] = 'LOW_ADVERSE_MEDIA';
         echo "  → Low adverse media coverage detected (+5 compliance points)\n";
