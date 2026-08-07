@@ -13,7 +13,7 @@ Successfully created a comprehensive Examples directory with real-world KYC (Kno
 1. **Examples/KYC/BasicRiskScoring.php** (7,598 bytes)
    - Customer demographics assessment
    - Age, income, geographic, employment risk factors
-   - Demonstrates NestedRuleApi, StringRuleApi, and FlatRuleAPI
+   - Demonstrates NestedRuleApi, ExpressionRuleApi, and FlatRuleAPI
    - Action-based scoring system
 
 2. **Examples/KYC/DocumentVerification.php** (13,830 bytes)
@@ -49,7 +49,7 @@ Successfully created a comprehensive Examples directory with real-world KYC (Kno
 ### Rule Engine APIs
 - **NestedRuleApi**: Complex business logic with nested conditions
 - **FlatRuleAPI**: Performance-critical rule evaluation with RPN
-- **StringRuleApi**: Human-readable infix expressions
+- **ExpressionRuleApi**: Human-readable infix expressions
 
 ### Business Logic Patterns
 - Action-based variable modification (`.risk_score + 25`)

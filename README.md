@@ -6,9 +6,10 @@ Pick the API that matches the shape of your data:
 
 - **FlatRuleAPI** – send a linear array in [Reverse Polish Notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) for fast stack-based evaluation.
 - **NestedRuleApi** – describe rules as nested associative arrays that read like infix notation.
-- **StringRuleApi** – parse and evaluate human readable infix expressions.
+- **ExpressionRuleApi** – evaluate human-readable expressions using the maintained [Symfony ExpressionLanguage](https://symfony.com/doc/current/components/expression_language.html) parser.
+- **StringRuleApi** – legacy text expression API, deprecated in favor of `ExpressionRuleApi`.
 
-Both APIs accept arrays decoded from JSON and can work with callables inside the evaluation context, giving you a flexible way to run rules or trigger simple actions.
+`FlatRuleAPI` and `NestedRuleApi` accept arrays decoded from JSON and can work with callables inside the evaluation context. `ExpressionRuleApi` accepts scalar and array data and intentionally rejects objects and callables.
 
 ## How it works
 
@@ -16,7 +17,7 @@ The library implements the **Rule Archetype Pattern** from the book ["Enterprise
 
 ## Requirements
 
- - PHP 8.4 or higher
+- PHP 8.4.1 or higher
 - Composer
 
 ## Installation
@@ -25,7 +26,7 @@ To install the library, use Composer:
 
 ```sh
 composer require jakubciszak/rule-engine
-````
+```
 
 ## Usage
 
@@ -98,9 +99,55 @@ $data = ['a' => 1, 'b' => 3];
 NestedRuleApi::evaluate($ruleset, $data); // true
 ```
 
-### StringRuleApi usage
+### ExpressionRuleApi
 
-`StringRuleApi` accepts conditions written as human readable infix expressions. Variables are denoted by a leading dot and resolved from the supplied data array.
+`ExpressionRuleApi` uses native Symfony ExpressionLanguage syntax. Variables are passed as top-level context values, strings must be quoted and strict comparison is available through `===` and `!==`.
+
+```php
+use JakubCiszak\RuleEngine\Api\ExpressionRuleApi;
+
+$expression = '(actualAge > 18 or name === "Adam") or (citizenship === "PL" and actualAge > 15)';
+$data = ['actualAge' => 16, 'name' => 'John', 'citizenship' => 'PL'];
+
+$result = ExpressionRuleApi::evaluate($expression, $data); // true
+```
+
+Nested arrays use bracket access:
+
+```php
+$expression = 'customer["address"]["country"] === "PL" and customer["role"] in ["admin", "owner"]';
+$data = [
+    'customer' => [
+        'address' => ['country' => 'PL'],
+        'role' => 'admin',
+    ],
+];
+
+ExpressionRuleApi::evaluate($expression, $data); // true
+```
+
+A set of named expressions is evaluated completely and succeeds only when every expression returns `true`:
+
+```php
+$rules = [
+    'adult' => 'actualAge >= 18',
+    'plCitizen' => 'citizenship === "PL"',
+];
+
+ExpressionRuleApi::evaluate($rules, ['actualAge' => 20, 'citizenship' => 'PL']); // true
+```
+
+Expressions can be checked before they are stored or executed:
+
+```php
+ExpressionRuleApi::lint('actualAge >= 18', ['actualAge' => 20]);
+```
+
+The default rule language exposes no PHP functions, including `constant()` and `enum()`, and exposed context values can contain only scalar values, `null` and arrays. Top-level keys that are not valid expression identifiers are ignored; wrap data under a valid key and use bracket access when arbitrary keys are needed. Applications can pass a custom `RuleExpressionLanguage` instance with explicitly allowed expression providers as the third argument.
+
+### StringRuleApi usage (deprecated)
+
+`StringRuleApi` is retained for backward compatibility. New integrations should use `ExpressionRuleApi`. Its legacy syntax denotes variables with a leading dot and resolves them from the supplied data array.
 
 ```php
 use JakubCiszak\RuleEngine\Api\StringRuleApi;

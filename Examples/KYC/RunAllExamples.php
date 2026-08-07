@@ -59,7 +59,7 @@ echo "Summary of Rule Engine KYC Capabilities Demonstrated:\n\n";
 echo "1. MULTIPLE API USAGE:\n";
 echo "   • NestedRuleApi: Complex business logic with nested conditions\n";
 echo "   • FlatRuleAPI: Performance-critical rule evaluation\n";
-echo "   • StringRuleApi: Human-readable rule expressions\n\n";
+echo "   • ExpressionRuleApi: Human-readable rule expressions\n\n";
 
 echo "2. REAL-WORLD BUSINESS SCENARIOS:\n";
 echo "   • Age-based risk assessment\n";

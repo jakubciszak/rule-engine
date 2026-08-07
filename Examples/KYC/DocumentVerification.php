@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use JakubCiszak\RuleEngine\Api\NestedRuleApi;
 use JakubCiszak\RuleEngine\Api\FlatRuleAPI;
-use JakubCiszak\RuleEngine\Api\StringRuleApi;
+use JakubCiszak\RuleEngine\Api\ExpressionRuleApi;
 
 echo "=== KYC Document Verification Example ===\n\n";
 
@@ -114,7 +114,7 @@ function primaryIdVerification(array &$customer): bool
 }
 
 /**
- * Example 2: Address Verification using StringRuleApi
+ * Example 2: Address Verification using ExpressionRuleApi
  * Validates proof of address documents
  */
 function addressVerification(array &$customer): bool
@@ -123,34 +123,34 @@ function addressVerification(array &$customer): bool
     $sixMonthsAgo = date('Y-m-d', strtotime('-6 months'));
     
     $rules = [
-        'recent_utility_bill' => "has_utility_bill == true and utility_bill_date > '{$threeMonthsAgo}'",
-        'recent_bank_statement' => "has_bank_statement == true and bank_statement_date > '{$threeMonthsAgo}'",
-        'old_utility_bill' => "has_utility_bill == true and utility_bill_date <= '{$sixMonthsAgo}'",
-        'address_mismatch' => 'address_matches == false'
+        'recent_utility_bill' => "has_utility_bill === true and utility_bill_date > '{$threeMonthsAgo}'",
+        'recent_bank_statement' => "has_bank_statement === true and bank_statement_date > '{$threeMonthsAgo}'",
+        'old_utility_bill' => "has_utility_bill === true and utility_bill_date <= '{$sixMonthsAgo}'",
+        'address_mismatch' => 'address_matches === false'
     ];
 
     $result = false;
     
-    if (StringRuleApi::evaluate($rules['recent_utility_bill'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['recent_utility_bill'], $customer)) {
         $customer['verification_score'] += 25;
         echo "  → Recent utility bill verified (+25 points)\n";
         $result = true;
     }
     
-    if (StringRuleApi::evaluate($rules['recent_bank_statement'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['recent_bank_statement'], $customer)) {
         $customer['verification_score'] += 25;
         echo "  → Recent bank statement verified (+25 points)\n";
         $result = true;
     }
     
-    if (StringRuleApi::evaluate($rules['old_utility_bill'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['old_utility_bill'], $customer)) {
         $customer['verification_score'] -= 15;
         $customer['required_additional_docs'] = true;
         echo "  → Utility bill too old (-15 points, additional docs required)\n";
         $result = true;
     }
     
-    if (StringRuleApi::evaluate($rules['address_mismatch'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['address_mismatch'], $customer)) {
         $customer['verification_score'] -= 30;
         $customer['required_additional_docs'] = true;
         echo "  → Address mismatch detected (-30 points, additional docs required)\n";

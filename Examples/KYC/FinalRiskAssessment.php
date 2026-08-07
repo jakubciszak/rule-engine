@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use JakubCiszak\RuleEngine\Api\NestedRuleApi;
 use JakubCiszak\RuleEngine\Api\FlatRuleAPI;
-use JakubCiszak\RuleEngine\Api\StringRuleApi;
+use JakubCiszak\RuleEngine\Api\ExpressionRuleApi;
 
 echo "=== KYC Final Risk Assessment Example ===\n\n";
 
@@ -170,41 +170,41 @@ function integrateBasicRiskFactors(array &$customer): bool
 }
 
 /**
- * Example 2: Document Verification Impact using StringRuleApi
+ * Example 2: Document Verification Impact using ExpressionRuleApi
  * Assesses how document verification results affect final risk
  */
 function integrateDocumentVerification(array &$customer): bool
 {
     $rules = [
-        'document_verification_bonus' => 'document_verification_score >= 80 and documents_complete == true',
-        'document_quality_issue' => 'document_quality_adequate == false',
-        'incomplete_documents' => 'documents_complete == false',
+        'document_verification_bonus' => 'document_verification_score >= 80 and documents_complete === true',
+        'document_quality_issue' => 'document_quality_adequate === false',
+        'incomplete_documents' => 'documents_complete === false',
         'low_verification_score' => 'document_verification_score < 50'
     ];
 
     $result = false;
 
-    if (StringRuleApi::evaluate($rules['document_verification_bonus'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['document_verification_bonus'], $customer)) {
         $customer['final_risk_score'] -= 10; // Reduce risk for good documentation
         echo "  → Excellent document verification (-10 risk points)\n";
         $result = true;
     }
 
-    if (StringRuleApi::evaluate($rules['document_quality_issue'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['document_quality_issue'], $customer)) {
         $customer['final_risk_score'] += 25;
         $customer['conditions'][] = 'IMPROVED_DOCUMENTATION_REQUIRED';
         echo "  → Document quality issues (+25 risk points)\n";
         $result = true;
     }
 
-    if (StringRuleApi::evaluate($rules['incomplete_documents'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['incomplete_documents'], $customer)) {
         $customer['final_risk_score'] += 30;
         $customer['conditions'][] = 'COMPLETE_DOCUMENTATION_REQUIRED';
         echo "  → Incomplete documentation (+30 risk points)\n";
         $result = true;
     }
 
-    if (StringRuleApi::evaluate($rules['low_verification_score'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['low_verification_score'], $customer)) {
         $customer['final_risk_score'] += 40;
         $customer['approval_level_required'] = 'senior_compliance';
         echo "  → Low document verification score (+40 risk points)\n";
@@ -313,7 +313,7 @@ function integrateSanctionsCompliance(array &$customer): bool
 }
 
 /**
- * Example 5: Final Risk Level Determination using StringRuleApi
+ * Example 5: Final Risk Level Determination using ExpressionRuleApi
  * Determines the overall risk level based on combined factors
  */
 function determineFinalRiskLevel(array &$customer): bool
@@ -335,7 +335,7 @@ function determineFinalRiskLevel(array &$customer): bool
         'medium_risk' => ['MEDIUM', 'enhanced'],
         'low_risk' => ['LOW', 'standard']
     ] as $key => [$riskLevel, $monitoringLevel]) {
-        if (StringRuleApi::evaluate($rules[$key], $customer)) {
+        if (ExpressionRuleApi::evaluate($rules[$key], $customer)) {
             $level = $riskLevel;
             $monitoring = $monitoringLevel;
             $result = true;

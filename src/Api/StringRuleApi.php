@@ -5,6 +5,9 @@ namespace JakubCiszak\RuleEngine\Api;
 use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset};
 use InvalidArgumentException;
 
+/**
+ * @deprecated since 1.4.0, use ExpressionRuleApi with Symfony ExpressionLanguage syntax instead.
+ */
 final class StringRuleApi
 {
     private static int $constCounter = 0;

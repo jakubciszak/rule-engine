@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use JakubCiszak\RuleEngine\Api\NestedRuleApi;
 use JakubCiszak\RuleEngine\Api\FlatRuleAPI;
-use JakubCiszak\RuleEngine\Api\StringRuleApi;
+use JakubCiszak\RuleEngine\Api\ExpressionRuleApi;
 
 echo "=== KYC Basic Risk Scoring Example ===\n\n";
 
@@ -77,25 +77,25 @@ function ageRiskAssessment(array &$customer): bool
 }
 
 /**
- * Example 2: Income-based Risk Assessment using StringRuleApi
+ * Example 2: Income-based Risk Assessment using ExpressionRuleApi
  * Very high income without corresponding employment raises suspicion
  */
 function incomeRiskAssessment(array &$customer): bool
 {
     $rules = [
-        'suspicious_income' => 'annual_income > 300000 and employment_status == unemployed',
+        'suspicious_income' => 'annual_income > 300000 and employment_status === "unemployed"',
         'high_income_risk' => 'annual_income > 200000 and employment_years < 2',
     ];
 
     $result = false;
     
-    if (StringRuleApi::evaluate($rules['suspicious_income'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['suspicious_income'], $customer)) {
         $customer['risk_score'] += 50;
         $result = true;
         echo "  → Suspicious income pattern detected (+50 risk points)\n";
     }
     
-    if (StringRuleApi::evaluate($rules['high_income_risk'], $customer)) {
+    if (ExpressionRuleApi::evaluate($rules['high_income_risk'], $customer)) {
         $customer['risk_score'] += 20;
         $result = true;
         echo "  → High income with short employment history (+20 risk points)\n";
