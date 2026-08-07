@@ -38,8 +38,6 @@ final class FlatRuleAPI
             $rulesetData['rules']
         );
         $ruleset = new Ruleset(...$rules);
-        $ruleset = new Ruleset(...$rules);
-        $result = $ruleset->evaluate($context)->getValue();
         $result = $ruleset->evaluate($context)->getValue();
         return new EvaluationResult($result, $context->toArray());
     }

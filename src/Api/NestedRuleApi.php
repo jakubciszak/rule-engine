@@ -44,7 +44,6 @@ final class NestedRuleApi
             );
             $ruleset = new Ruleset(...$ruleObjects);
             $result = $ruleset->evaluate($context)->getValue();
-            $result = $ruleset->evaluate($context)->getValue();
 
             return new EvaluationResult($result, array_merge($data, $context->toArray()));
         }
