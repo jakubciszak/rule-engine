@@ -2,7 +2,7 @@
 
 namespace JakubCiszak\RuleEngine\Api;
 
-use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset, Action, ActivityRule, RuleInterface};
+use JakubCiszak\RuleEngine\{Rule, RuleContext, Operator, Ruleset, Action, ActivityRule, RuleInterface, EvaluationResult};
 use JakubCiszak\RuleEngine\Api\ActionParser;
 use InvalidArgumentException;
 
@@ -20,7 +20,7 @@ final class NestedRuleApi
      * @param array<mixed> $rules
      * @param array<string, mixed> $data
      */
-    public static function evaluate(array $rules, array &$data = []): bool
+    public static function evaluate(array $rules, array $data = []): EvaluationResult
     {
         $flatData = self::flattenData($data);
         $expandedRules = self::expandWildcards($rules, $flatData);
@@ -42,12 +42,11 @@ final class NestedRuleApi
                 },
                 array_keys($expandedRules)
             );
-
             $ruleset = new Ruleset(...$ruleObjects);
             $result = $ruleset->evaluate($context)->getValue();
-            
-            $data = array_merge($data, $context->toArray());
-            return $result;
+            $result = $ruleset->evaluate($context)->getValue();
+
+            return new EvaluationResult($result, array_merge($data, $context->toArray()));
         }
 
         $actions = self::extractActions($expandedRules);
@@ -58,10 +57,8 @@ final class NestedRuleApi
         $executor = $actions === [] ? $rule : self::decorateWithActions($rule, $actions);
 
         $result = $executor->evaluate($context)->getValue();
-        
-        // Merge flat data back to original structure and update reference
-        $data = array_merge($data, $context->toArray());
-        return $result;
+
+        return new EvaluationResult($result, array_merge($data, $context->toArray()));
     }
 
     /**

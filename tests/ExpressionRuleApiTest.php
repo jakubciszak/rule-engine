@@ -23,7 +23,7 @@ final class ExpressionRuleApiTest extends TestCase
             'citizenship' => 'PL',
         ];
 
-        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data));
+        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data)->getResult());
     }
 
     public function testEvaluatesEveryExpressionInNamedRuleset(): void
@@ -41,13 +41,13 @@ final class ExpressionRuleApiTest extends TestCase
             'status' => 'blocked',
         ];
 
-        self::assertTrue(ExpressionRuleApi::evaluate($expressions, $activeAdult));
-        self::assertFalse(ExpressionRuleApi::evaluate($expressions, $blockedAdult));
+        self::assertTrue(ExpressionRuleApi::evaluate($expressions, $activeAdult)->getResult());
+        self::assertFalse(ExpressionRuleApi::evaluate($expressions, $blockedAdult)->getResult());
     }
 
     public function testEmptyRulesetUsesVacuousTruth(): void
     {
-        self::assertTrue(ExpressionRuleApi::evaluate([]));
+        self::assertTrue(ExpressionRuleApi::evaluate([])->getResult());
     }
 
     public function testSupportsQuotedStringsAndNotEqualOperator(): void
@@ -58,7 +58,7 @@ final class ExpressionRuleApiTest extends TestCase
             'status' => 'active',
         ];
 
-        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data));
+        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data)->getResult());
     }
 
     public function testSupportsNestedArraysAndStrictMembership(): void
@@ -71,7 +71,7 @@ final class ExpressionRuleApiTest extends TestCase
             ],
         ];
 
-        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data));
+        self::assertTrue(ExpressionRuleApi::evaluate($expression, $data)->getResult());
     }
 
     public function testKeepsStrictComparisonExplicit(): void
@@ -79,8 +79,8 @@ final class ExpressionRuleApiTest extends TestCase
         $strictData = ['value' => '1'];
         $looseData = ['value' => '1'];
 
-        self::assertFalse(ExpressionRuleApi::evaluate('value === 1', $strictData));
-        self::assertTrue(ExpressionRuleApi::evaluate('value == 1', $looseData));
+        self::assertFalse(ExpressionRuleApi::evaluate('value === 1', $strictData)->getResult());
+        self::assertTrue(ExpressionRuleApi::evaluate('value == 1', $looseData)->getResult());
     }
 
     public function testRejectsExpressionReturningNonBooleanValue(): void
@@ -122,7 +122,7 @@ final class ExpressionRuleApiTest extends TestCase
             'score' => 123,
         ];
 
-        self::assertTrue(ExpressionRuleApi::evaluate('score === 123', $data));
+        self::assertTrue(ExpressionRuleApi::evaluate('score === 123', $data)->getResult());
     }
 
     public function testAllowsExplicitlyRegisteredFunctions(): void
@@ -140,7 +140,7 @@ final class ExpressionRuleApiTest extends TestCase
             'length(name) > 3',
             $data,
             $language,
-        ));
+        )->getResult());
     }
 
     public function testExecutesActionsWhenExpressionMatches(): void
@@ -160,9 +160,11 @@ final class ExpressionRuleApiTest extends TestCase
             ],
         );
 
-        self::assertTrue($result);
-        self::assertSame(1, $data['count']);
-        self::assertSame('approved', $data['status']);
+        self::assertTrue($result->getResult());
+        self::assertSame(0, $data['count']);
+        self::assertSame('pending', $data['status']);
+        self::assertSame(1, $result->getContext()['count']);
+        self::assertSame('approved', $result->getContext()['status']);
     }
 
     public function testDoesNotExecuteActionsWhenExpressionDoesNotMatch(): void
@@ -178,8 +180,9 @@ final class ExpressionRuleApiTest extends TestCase
             actions: ['.count + 1'],
         );
 
-        self::assertFalse($result);
+        self::assertFalse($result->getResult());
         self::assertSame(0, $data['count']);
+        self::assertSame(0, $result->getContext()['count']);
     }
 
     public function testExecutesActionsOnceAfterEntireNamedRulesetMatches(): void
@@ -199,8 +202,9 @@ final class ExpressionRuleApiTest extends TestCase
             actions: ['.count + 1'],
         );
 
-        self::assertTrue($result);
-        self::assertSame(1, $data['count']);
+        self::assertTrue($result->getResult());
+        self::assertSame(0, $data['count']);
+        self::assertSame(1, $result->getContext()['count']);
     }
 
     public function testActionsCanReferenceContextAndEarlierActionResults(): void
@@ -211,7 +215,7 @@ final class ExpressionRuleApiTest extends TestCase
             'increment' => 2,
         ];
 
-        ExpressionRuleApi::evaluate(
+        $result = ExpressionRuleApi::evaluate(
             expression: 'eligible',
             data: $data,
             actions: [
@@ -220,8 +224,11 @@ final class ExpressionRuleApiTest extends TestCase
             ],
         );
 
-        self::assertSame(3, $data['count']);
-        self::assertSame(3, $data['total']);
+        self::assertTrue($result->getResult());
+        self::assertSame(1, $data['count']);
+        self::assertArrayNotHasKey('total', $data);
+        self::assertSame(3, $result->getContext()['count']);
+        self::assertSame(3, $result->getContext()['total']);
     }
 
     public function testValidatesActionsBeforeEvaluatingExpression(): void

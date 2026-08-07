@@ -58,14 +58,16 @@ Rules can also be defined using JSON in RPN order. The example below presents tw
 }
 ```
 
-This JSON can be decoded and passed to the `FlatRuleAPI` context to get the evaluation result as a boolean. The context array is
-passed by reference and updated with any values changed during evaluation.
+This JSON can be decoded and passed to `FlatRuleAPI`. Evaluation returns an `EvaluationResult`
+object with the boolean outcome and the updated context.
 
 ```php
 $rules = json_decode('{"rules": [...]}', true, 512, JSON_THROW_ON_ERROR);
 $context = json_decode('{"a":1,"b":2}', true, 512, JSON_THROW_ON_ERROR);
 $result = FlatRuleAPI::evaluate($rules, $context);
-// $context now contains any modifications made by rule actions
+
+$result->getResult(); // bool
+$result->getContext(); // updated context array
 ```
 
 
@@ -83,7 +85,8 @@ $rules = ['and' => [
 
 $data = ['temp' => 100, 'pie' => ['filling' => 'apple']];
 
-$result = NestedRuleApi::evaluate($rules, $data); // true
+$result = NestedRuleApi::evaluate($rules, $data);
+$result->getResult(); // true
 ```
 
 You can also pass a set of named rules for evaluation:
@@ -96,7 +99,7 @@ $ruleset = [
 
 $data = ['a' => 1, 'b' => 3];
 
-NestedRuleApi::evaluate($ruleset, $data); // true
+NestedRuleApi::evaluate($ruleset, $data)->getResult(); // true
 ```
 
 ### ExpressionRuleApi
@@ -109,7 +112,8 @@ use JakubCiszak\RuleEngine\Api\ExpressionRuleApi;
 $expression = '(actualAge > 18 or name === "Adam") or (citizenship === "PL" and actualAge > 15)';
 $data = ['actualAge' => 16, 'name' => 'John', 'citizenship' => 'PL'];
 
-$result = ExpressionRuleApi::evaluate($expression, $data); // true
+$result = ExpressionRuleApi::evaluate($expression, $data);
+$result->getResult(); // true
 ```
 
 Nested arrays use bracket access:
@@ -123,7 +127,7 @@ $data = [
     ],
 ];
 
-ExpressionRuleApi::evaluate($expression, $data); // true
+ExpressionRuleApi::evaluate($expression, $data)->getResult(); // true
 ```
 
 A set of named expressions is evaluated completely and succeeds only when every expression returns `true`:
@@ -135,10 +139,10 @@ $rules = [
 ];
 $data = ['actualAge' => 20, 'citizenship' => 'PL'];
 
-ExpressionRuleApi::evaluate($rules, $data); // true
+ExpressionRuleApi::evaluate($rules, $data)->getResult(); // true
 ```
 
-Actions use the existing rule action syntax and update the context passed by reference. They are parsed before evaluation and executed once only when the complete expression or named ruleset returns `true`:
+Actions use the existing rule action syntax. They are parsed before evaluation and executed once only when the complete expression or named ruleset returns `true`. Updated context is available on the returned `EvaluationResult`:
 
 ```php
 $data = [
@@ -147,17 +151,18 @@ $data = [
     'score' => 0,
 ];
 
-ExpressionRuleApi::evaluate(
+$result = ExpressionRuleApi::evaluate(
     expression: 'actualAge >= 18',
     data: $data,
     actions: [
         '.status = approved',
         '.score + 10',
     ],
-); // true
+);
 
-// $data['status'] === 'approved'
-// $data['score'] === 10
+$result->getResult(); // true
+$result->getContext()['status']; // approved
+$result->getContext()['score']; // 10
 ```
 
 Expressions can be checked before they are stored or executed:
@@ -178,7 +183,8 @@ use JakubCiszak\RuleEngine\Api\StringRuleApi;
 $expr = '(.actualAge > 18 or .name is Adam) or (.citizenship is PL and .actualAge > 15)';
 $data = ['actualAge' => 16, 'name' => 'John', 'citizenship' => 'PL'];
 
-$result = StringRuleApi::evaluate($expr, $data); // true
+$result = StringRuleApi::evaluate($expr, $data);
+$result->getResult(); // true
 ```
 
 Complex nested conditions are also supported:
@@ -196,10 +202,11 @@ $data = [
     'h' => true,
 ];
 
-$result = StringRuleApi::evaluate($complex, $data); // true
+$result = StringRuleApi::evaluate($complex, $data);
+$result->getResult(); // true
 ```
 
-`StringRuleApi` can evaluate a set of named expressions as a ruleset, returning a single boolean result:
+`StringRuleApi` can evaluate a set of named expressions as a ruleset, returning an `EvaluationResult` with a single boolean result:
 
 ```php
 $rules = [
@@ -208,7 +215,8 @@ $rules = [
 ];
 $data = ['actualAge' => 16, 'citizenship' => 'PL'];
 
-$result = StringRuleApi::evaluate($rules, $data); // false
+$result = StringRuleApi::evaluate($rules, $data);
+$result->getResult(); // false
 ```
 
 Boolean variables can be referenced directly without explicit comparison and negated using `not`:
@@ -217,7 +225,7 @@ Boolean variables can be referenced directly without explicit comparison and neg
 $flags = '.g and not .h';
 $data = ['g' => true, 'h' => false];
 
-StringRuleApi::evaluate($flags, $data); // true
+StringRuleApi::evaluate($flags, $data)->getResult(); // true
 ```
 
 ### Rule actions
